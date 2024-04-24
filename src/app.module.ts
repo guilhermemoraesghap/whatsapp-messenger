@@ -1,8 +1,17 @@
 import { Module } from '@nestjs/common';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { ConnectionModule } from './connection/connection.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { CompanyModule } from './company/company.module';
 
 @Module({
-  imports: [WhatsAppModule, ConnectionModule],
+  imports: [
+    WhatsAppModule,
+    ConnectionModule,
+    UserModule,
+    AuthModule,
+    CompanyModule,
+  ],
 })
 export class AppModule {}

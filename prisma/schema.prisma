@@ -22,3 +22,28 @@ model Connection {
 
   @@map("connections")
 }
+
+model User {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  email     String    @unique
+  password  String
+  type      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  companies   Company[]
+
+  @@map("users")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("companies")
+}
