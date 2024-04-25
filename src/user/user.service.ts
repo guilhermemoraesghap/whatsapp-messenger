@@ -98,12 +98,4 @@ export class UserService {
 
     return userUpdated;
   }
-
-  async findAll() {
-    const users = await this.prisma.user.findMany({
-      select: selectFields,
-    });
-
-    return users;
-  }
 }

@@ -40,23 +40,17 @@ export class UserController {
   }
 
   @Put()
+  @UseGuards(JwtGuard)
   async update(
-    id: string,
-    { email, name }: UpdateUserDto,
+    @CurrentUser() user: AuthUser,
+    @Body() { email, name }: UpdateUserDto,
     @Res() response: Response,
   ) {
-    const userUpdated = await this.userService.update(id, {
+    const userUpdated = await this.userService.update(user.id, {
       email,
       name,
     });
 
     return response.status(HttpStatus.OK).json(userUpdated);
-  }
-
-  @Get()
-  async findAll(@Res() response: Response) {
-    const users = await this.userService.findAll();
-
-    return response.status(HttpStatus.OK).json(users);
   }
 }
