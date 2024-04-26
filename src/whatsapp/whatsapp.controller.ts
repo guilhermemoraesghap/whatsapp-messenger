@@ -1,13 +1,16 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { WhatsAppService } from './whatsapp.service';
+import { JwtGuard } from 'src/auth/jwt/jwt-guard';
+import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
 
 @Controller('whatsapp')
 export class WhatsAppController {
   constructor(private readonly whatsappService: WhatsAppService) {}
 
   @Get('generate-qr')
-  async generateQRCode() {
-    const qrCode = await this.whatsappService.generateQRCode();
+  @UseGuards(JwtGuard)
+  async generateQRCode(@CurrentUser() user: AuthUser) {
+    const qrCode = await this.whatsappService.generateQRCode(user.id);
 
     return qrCode;
   }

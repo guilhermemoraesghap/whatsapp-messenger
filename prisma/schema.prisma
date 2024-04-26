@@ -17,6 +17,8 @@ model Connection {
   id          String   @id @default(uuid())
   sessionId   String   @map("session_id")
   phoneNumber String   @unique @map("phone_number")
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @unique @map("user_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @default(now()) @map("update_at")
 
@@ -24,14 +26,15 @@ model Connection {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  email     String   @unique
-  password  String
-  type      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-  company   Company?
+  id         String      @id @default(uuid())
+  name       String      @unique
+  email      String      @unique
+  password   String
+  type       String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @default(now()) @map("updated_at")
+  company    Company?
+  connection Connection?
 
   @@map("users")
 }

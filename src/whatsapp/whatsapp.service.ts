@@ -21,7 +21,9 @@ export class WhatsAppService {
     this.loadSessions();
   }
 
-  async generateQRCode(): Promise<{ sessionId: string; qrCode: string }> {
+  async generateQRCode(
+    userId: string,
+  ): Promise<{ sessionId: string; qrCode: string }> {
     const sessionId = uuidv4();
 
     const authPath = `./sessions/${sessionId}`;
@@ -74,6 +76,7 @@ export class WhatsAppService {
                 await this.connectionService.createOrUpdate({
                   phoneNumber,
                   sessionId,
+                  userId,
                 });
               }
             }

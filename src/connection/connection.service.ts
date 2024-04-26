@@ -15,7 +15,11 @@ export interface Connection {
 export class ConnectionService {
   constructor(private prisma: PrismaService) {}
 
-  async createOrUpdate({ phoneNumber, sessionId }: CreateConnectionDto) {
+  async createOrUpdate({
+    phoneNumber,
+    sessionId,
+    userId,
+  }: CreateConnectionDto) {
     const phoneNumerAlreadyExists = await this.prisma.connection.findUnique({
       where: {
         phoneNumber,
@@ -40,9 +44,20 @@ export class ConnectionService {
         data: {
           phoneNumber,
           sessionId,
+          userId,
         },
       });
     }
+  }
+
+  async find(userId: string): Promise<Connection> {
+    const connection = await this.prisma.connection.findUnique({
+      where: {
+        userId,
+      },
+    });
+
+    return connection;
   }
 
   async findAll(): Promise<Connection[]> {
