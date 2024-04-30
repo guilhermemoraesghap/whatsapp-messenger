@@ -14,7 +14,9 @@ import { Response } from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtGuard } from 'src/auth/jwt/jwt-guard';
 import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -35,8 +37,8 @@ export class UserController {
 
   @Get('me')
   @UseGuards(JwtGuard)
-  findMe(@CurrentUser() user: AuthUser) {
-    return this.userService.findById(user.id);
+  async findMe(@CurrentUser() user: AuthUser) {
+    return await this.userService.findById(user.id);
   }
 
   @Put()

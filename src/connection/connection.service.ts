@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateConnectionDto } from './dto/create-connection.dto';
 import * as fs from 'fs';
@@ -64,5 +64,23 @@ export class ConnectionService {
     const connections = await this.prisma.connection.findMany();
 
     return connections;
+  }
+
+  async findByCompanyId(id: string) {
+    const company = await this.prisma.company.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!company) throw new NotFoundException('Empresa não encontrada.');
+
+    const connection = await this.prisma.connection.findUnique({
+      where: {
+        userId: company.userId,
+      },
+    });
+
+    return connection;
   }
 }

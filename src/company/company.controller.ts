@@ -15,8 +15,10 @@ import { Response } from 'express';
 import { JwtGuard } from 'src/auth/jwt/jwt-guard';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('company')
+@ApiTags('companies')
+@Controller('companies')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
@@ -55,6 +57,6 @@ export class CompanyController {
   @Get()
   @UseGuards(JwtGuard)
   async listCompany(@CurrentUser() user: AuthUser) {
-    return this.companyService.listCompany(user.id);
+    return await this.companyService.listCompany(user.id);
   }
 }

@@ -2,7 +2,9 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { WhatsAppService } from './whatsapp.service';
 import { JwtGuard } from 'src/auth/jwt/jwt-guard';
 import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('whatsapp')
 @Controller('whatsapp')
 export class WhatsAppController {
   constructor(private readonly whatsappService: WhatsAppService) {}
