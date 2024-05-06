@@ -22,15 +22,16 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @UseGuards(JwtGuard)
   async create(
     @Body() { email, name, password }: CreateUserDto,
     @Res() response: Response,
+    @CurrentUser() user: AuthUser,
   ) {
-    const userCreated = await this.userService.create({
-      email,
-      name,
-      password,
-    });
+    const userCreated = await this.userService.create(
+      { email, name, password },
+      user.type,
+    );
 
     return response.status(HttpStatus.CREATED).json(userCreated);
   }

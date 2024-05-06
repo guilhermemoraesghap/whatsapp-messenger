@@ -33,12 +33,13 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    const { name } = userExists;
+    const { name, type } = userExists;
 
     return {
       access_token: accessToken,
       user: {
         name,
+        type,
       },
     };
   }

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -31,11 +32,16 @@ const selectFields = {
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async create({
-    email,
-    name,
-    password,
-  }: CreateUserDto): Promise<CreateUserResponse> {
+  async create(
+    { email, name, password }: CreateUserDto,
+    userType: string,
+  ): Promise<CreateUserResponse> {
+    if (userType !== 'admin') {
+      throw new ForbiddenException(
+        'Apenas usuários do tipo admin podem criar novos usuários',
+      );
+    }
+
     const emailAlreadyExists = await this.prisma.user.findUnique({
       where: {
         email,
