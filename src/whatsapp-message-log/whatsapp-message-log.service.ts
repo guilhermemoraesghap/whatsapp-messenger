@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { WhatsAppService } from '../whatsapp/whatsapp.service';
-import { ResendMessageDto } from './dto/resend-messate.dto';
+import { ResendMessageDto } from './dto/resend-message.dto';
 
 @Injectable()
 export class WhatsAppMessageLogService {
