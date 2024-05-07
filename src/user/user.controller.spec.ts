@@ -53,7 +53,13 @@ describe('UserController', () => {
 
       jest.spyOn(userService, 'create').mockResolvedValue(userCreated);
 
-      await controller.create(createUserDto, responseMock as Response);
+      const authenticatedUser: AuthUser = { id: '1', type: 'admin' };
+
+      await controller.create(
+        createUserDto,
+        responseMock as Response,
+        authenticatedUser,
+      );
 
       expect(responseMock.status).toHaveBeenCalledWith(HttpStatus.CREATED);
       expect(responseMock.json).toHaveBeenCalledWith(userCreated);
@@ -68,7 +74,7 @@ describe('UserController', () => {
 
       const userId = '123';
 
-      const currentUser = { id: userId };
+      const currentUser = { id: userId, type: 'admin' };
 
       const responseMock: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
@@ -110,7 +116,7 @@ describe('UserController', () => {
 
       jest.spyOn(userService, 'findById').mockResolvedValue(userFound);
 
-      const authenticatedUser: AuthUser = { id: '1' };
+      const authenticatedUser: AuthUser = { id: '1', type: 'admin' };
       const result = await controller.findMe(authenticatedUser);
 
       expect(userService.findById).toHaveBeenCalledWith('1');

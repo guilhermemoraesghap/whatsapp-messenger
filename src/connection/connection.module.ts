@@ -5,7 +5,6 @@ import { ConnectionController } from './connection.controller';
 
 @Module({
   providers: [ConnectionService, PrismaService],
-  exports: [ConnectionService],
   controllers: [ConnectionController],
 })
 export class ConnectionModule {}

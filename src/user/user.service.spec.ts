@@ -54,7 +54,7 @@ describe('UserService', () => {
         .spyOn(service['prisma'].user, 'create')
         .mockResolvedValueOnce(createdUser);
 
-      const result = await service.create(createUserDto);
+      const result = await service.create(createUserDto, 'admin');
       expect(result).toEqual(createdUser);
     });
 
@@ -73,7 +73,7 @@ describe('UserService', () => {
         .spyOn(service['prisma'].user, 'findUnique')
         .mockResolvedValueOnce(createUserDto);
 
-      await expect(service.create(createUserDto)).rejects.toThrow(
+      await expect(service.create(createUserDto, 'admin')).rejects.toThrow(
         ConflictException,
       );
     });

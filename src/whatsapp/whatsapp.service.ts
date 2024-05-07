@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   makeWASocket,
   DisconnectReason,
@@ -11,13 +11,18 @@ import * as qrcode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { ConnectionService } from '../connection/connection.service';
 import * as fs from 'fs';
+import { PrismaService } from '../prisma.service';
+import { SendMessageDto } from './dto/send-message.dto';
 
 @Injectable()
 export class WhatsAppService {
   private sessions: Map<string, WASocket> = new Map();
   private sock: WASocket;
 
-  constructor(private readonly connectionService: ConnectionService) {
+  constructor(
+    private readonly connectionService: ConnectionService,
+    private prisma: PrismaService,
+  ) {
     this.loadSessions();
   }
 
@@ -88,20 +93,47 @@ export class WhatsAppService {
     );
   }
 
-  async sendMessage(
-    sessionId: string,
-    phoneNumber: string,
-    message: string,
-  ): Promise<void> {
-    const sock = this.sessions.get(sessionId);
-    if (!sock) {
-      throw new Error(`Sessão com ID ${sessionId} não encontrada`);
+  async sendMessage({
+    companyId,
+    message,
+    patientId,
+    patientName,
+    phoneNumber,
+    sessionId,
+  }: SendMessageDto): Promise<string> {
+    const companyExists = await this.prisma.company.findUnique({
+      where: {
+        id: companyId,
+      },
+    });
+
+    if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
+
+    try {
+      const sock = this.sessions.get(sessionId);
+      if (!sock) {
+        throw new Error(`Sessão com ID ${sessionId} não encontrada`);
+      }
+      const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
+
+      await sock.sendMessage(formattedNumber, { text: message });
+
+      console.log(`Mensagem enviada para ${formattedNumber}`);
+
+      return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${sessionId}!`;
+    } catch (error) {
+      console.log(`Erro ao enviar mensagem através do whatsapp.`);
+
+      await this.prisma.whatsappMessageLog.create({
+        data: {
+          message,
+          phoneNumber,
+          patientId,
+          patientName,
+          companyId,
+        },
+      });
     }
-    const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
-
-    await sock.sendMessage(formattedNumber, { text: message });
-
-    console.log(`Mensagem enviada para ${formattedNumber}`);
   }
 
   private async loadSessions(): Promise<void> {

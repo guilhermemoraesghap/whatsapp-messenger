@@ -28,13 +28,14 @@ model User {
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String
-  cnpj      String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String   @unique @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  id                 String               @id @default(uuid())
+  name               String
+  cnpj               String               @unique
+  user               User                 @relation(fields: [userId], references: [id])
+  userId             String               @unique @map("user_id")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @default(now()) @map("updated_at")
+  WhatsappMessageLog WhatsappMessageLog[]
 
   @@map("companies")
 }
@@ -49,4 +50,18 @@ model Connection {
   updatedAt   DateTime @default(now()) @map("updated_at")
 
   @@map("connections")
+}
+
+model WhatsappMessageLog {
+  id          String   @id @default(uuid())
+  patientId   String   @map("patient_id")
+  patientName String   @map("patient_name")
+  message     String
+  phoneNumber String   @map("phone_number")
+  reSend      Boolean  @default(false) @map("re_send")
+  company     Company  @relation(fields: [companyId], references: [id])
+  companyId   String   @map("company_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("whatsapp_message_log")
 }
