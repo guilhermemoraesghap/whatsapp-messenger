@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   makeWASocket,
   DisconnectReason,
@@ -111,9 +115,11 @@ export class WhatsAppService {
 
     try {
       const sock = this.sessions.get(sessionId);
+
       if (!sock) {
         throw new Error(`Sessão com ID ${sessionId} não encontrada`);
       }
+
       const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
 
       await sock.sendMessage(formattedNumber, { text: message });
@@ -133,7 +139,26 @@ export class WhatsAppService {
           companyId,
         },
       });
+
+      throw new ConflictException(
+        'Erro ao enviar mensagem através do whatsapp, informações salvas no log de mensagens.',
+      );
     }
+  }
+
+  async resendMessage({ phoneNumber, sessionId, message }) {
+    const sock = this.sessions.get(sessionId);
+    if (!sock) {
+      throw new Error(`Sessão com ID ${sessionId} não encontrada`);
+    }
+
+    const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
+
+    await sock.sendMessage(formattedNumber, { text: message });
+
+    console.log(`Mensagem enviada para ${formattedNumber}`);
+
+    return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${sessionId}!`;
   }
 
   private async loadSessions(): Promise<void> {
