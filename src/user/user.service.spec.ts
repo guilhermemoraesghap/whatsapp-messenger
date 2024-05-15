@@ -5,7 +5,6 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
-  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,7 +24,6 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UserService>(UserService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -98,9 +96,9 @@ describe('UserService', () => {
       };
 
       jest
-        .spyOn(prismaService.user, 'findUnique')
+        .spyOn(service['prisma'].user, 'findUnique')
         .mockResolvedValue(existingUser);
-      jest.spyOn(prismaService.user, 'update').mockResolvedValue(null);
+      jest.spyOn(service['prisma'].user, 'update').mockResolvedValue(null);
 
       const result = await service.update(userId, updateUserDto);
 
@@ -117,9 +115,9 @@ describe('UserService', () => {
         email: 'updated@example.com',
       };
 
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
+      jest.spyOn(service['prisma'].user, 'findUnique').mockResolvedValue(null);
 
-      await expect(service.update(userId, updateUserDto)).rejects.toThrowError(
+      await expect(service.update(userId, updateUserDto)).rejects.toThrow(
         NotFoundException,
       );
     });
