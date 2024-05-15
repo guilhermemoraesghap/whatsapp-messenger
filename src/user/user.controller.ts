@@ -59,11 +59,7 @@ export class UserController {
   }
 
   @Post('reset-password')
-  async resetPassword(
-    @Body() id: string,
-    user: string,
-    @Res() response: Response,
-  ) {
+  async resetPassword(@Body() { id, user }, @Res() response: Response) {
     await this.userService.resetPassword(id, user);
 
     return response.status(HttpStatus.OK).json({

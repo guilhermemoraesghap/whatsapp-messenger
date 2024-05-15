@@ -126,9 +126,7 @@ export class UserService {
     }
 
     const userExists = await this.prisma.user.findFirst({
-      where: {
-        name: user,
-      },
+      where: condition,
     });
 
     if (!userExists) throw new NotFoundException('Usuário não encontrado');
@@ -146,20 +144,16 @@ export class UserService {
       },
     });
 
-    await this.emailService
-      .sendEmail({
-        subject: 'Nova senha Whatsapp Messenger',
-        text: `Sua nova senha de acesso ao Whatsapp Messenger é ${passwordGenerated}.`,
-        to: [userExists.email],
-        html: `
+    await this.emailService.sendEmail({
+      subject: 'Nova senha Whatsapp Messenger',
+      text: `Sua nova senha de acesso ao Whatsapp Messenger é ${passwordGenerated}.`,
+      to: [userExists.email],
+      html: `
       Sua nova senha de acesso ao Whatsapp Messenger é <b>${passwordGenerated}.</b>
       <br/><br/>
       <b>Não responda este-email</b>
   `,
-      })
-      .then(() => {
-        console.log('Email enviado...');
-      });
+    });
   }
 
   async changePassword(
