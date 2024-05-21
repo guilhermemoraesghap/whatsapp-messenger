@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from '../prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from '../auth/jwt/current-user';
+import { EmailService } from '../email/email.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -16,7 +17,7 @@ describe('UserController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService, PrismaService],
+      providers: [UserService, PrismaService, EmailService],
     })
       .overrideGuard(JwtGuard)
       .useValue({ canActivate: () => true })
@@ -36,6 +37,7 @@ describe('UserController', () => {
         email: 'test@example.com',
         name: 'Test User',
         password: 'password123',
+        companyId: '1',
       };
 
       const responseMock: Partial<Response> = {
@@ -88,6 +90,7 @@ describe('UserController', () => {
         updatedAt: new Date(),
         type: 'user',
         password: 'password',
+        companyId: '1',
       };
 
       jest.spyOn(userService, 'update').mockResolvedValue(userUpdated);
@@ -110,6 +113,7 @@ describe('UserController', () => {
         email: 'updated@example.com',
         password: 'password',
         type: 'user',
+        companyId: '1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };

@@ -12,9 +12,9 @@ import {
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { Response } from 'express';
-import { JwtGuard } from 'src/auth/jwt/jwt-guard';
+import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
+import { AuthUser, CurrentUser } from '../auth/jwt/current-user';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('companies')
@@ -25,14 +25,10 @@ export class CompanyController {
   @Post()
   @UseGuards(JwtGuard)
   async create(
-    @CurrentUser() user: AuthUser,
     @Body() createCompanyDto: CreateCompanyDto,
     @Res() response: Response,
   ) {
-    const companyCreated = await this.companyService.create(
-      user.id,
-      createCompanyDto,
-    );
+    const companyCreated = await this.companyService.create(createCompanyDto);
 
     return response.status(HttpStatus.CREATED).json(companyCreated);
   }

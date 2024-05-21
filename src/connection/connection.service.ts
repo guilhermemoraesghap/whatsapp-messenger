@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateConnectionDto } from './dto/create-connection.dto';
 import * as fs from 'fs';
+import { UserService } from '../user/user.service';
 
 export interface Connection {
   id: string;
@@ -13,47 +18,66 @@ export interface Connection {
 
 @Injectable()
 export class ConnectionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   async createOrUpdate({
     phoneNumber,
     sessionId,
     userId,
   }: CreateConnectionDto) {
-    const phoneNumerAlreadyExists = await this.prisma.connection.findUnique({
-      where: {
-        phoneNumber,
-      },
-    });
-
-    if (phoneNumerAlreadyExists) {
-      await this.prisma.connection.update({
-        data: {
-          sessionId,
-        },
+    try {
+      const phoneNumerAlreadyExists = await this.prisma.connection.findUnique({
         where: {
-          id: phoneNumerAlreadyExists.id,
-        },
-      });
-
-      const oldAuthPath = `./sessions/${phoneNumerAlreadyExists.sessionId}`;
-
-      fs.rmdirSync(oldAuthPath, { recursive: true });
-    } else {
-      await this.prisma.connection.create({
-        data: {
           phoneNumber,
-          sessionId,
-          userId,
         },
       });
+
+      const userExists = await this.userService.findById(userId);
+
+      if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+      if (!userExists.companyId)
+        throw new ConflictException('Este usuário não tem empresa.');
+
+      if (phoneNumerAlreadyExists) {
+        await this.prisma.connection.update({
+          data: {
+            sessionId,
+          },
+          where: {
+            id: phoneNumerAlreadyExists.id,
+          },
+        });
+
+        const oldAuthPath = `./sessions/${phoneNumerAlreadyExists.sessionId}`;
+
+        fs.rmdirSync(oldAuthPath, { recursive: true });
+      } else {
+        await this.prisma.connection.create({
+          data: {
+            phoneNumber,
+            sessionId,
+            companyId: userExists.companyId,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao criar ou atualizar conexão:', error);
+      throw error;
     }
   }
 
   async find(userId: string): Promise<Connection> {
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
     const connection = await this.prisma.connection.findUnique({
       where: {
-        userId,
+        companyId: userExists.companyId,
       },
     });
 
@@ -77,7 +101,7 @@ export class ConnectionService {
 
     const connection = await this.prisma.connection.findUnique({
       where: {
-        userId: company.userId,
+        companyId: id,
       },
     });
 

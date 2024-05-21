@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { ConnectionService } from './connection.service';
 import { Response } from 'express';
-import { JwtGuard } from 'src/auth/jwt/jwt-guard';
-import { AuthUser, CurrentUser } from 'src/auth/jwt/current-user';
+import { JwtGuard } from '../auth/jwt/jwt-guard';
+import { AuthUser, CurrentUser } from '../auth/jwt/current-user';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('connections')
