@@ -3,6 +3,7 @@ import { CompanyService } from './company.service';
 import { PrismaService } from '../prisma.service';
 import { UserService } from '../user/user.service';
 import { ConflictException } from '@nestjs/common';
+import { EmailService } from '../email/email.service';
 
 describe('CompanyService', () => {
   let service: CompanyService;
@@ -13,6 +14,7 @@ describe('CompanyService', () => {
         CompanyService,
         PrismaService,
         UserService,
+        EmailService,
         {
           provide: PrismaService,
           useValue: {
@@ -50,6 +52,7 @@ describe('CompanyService', () => {
         email: 'updated@example.com',
         password: 'password',
         type: 'user',
+        companyId: '1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -58,6 +61,7 @@ describe('CompanyService', () => {
         ...createCompanyDto,
         id: '1',
         userId,
+        companyId: '1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -74,7 +78,7 @@ describe('CompanyService', () => {
         .spyOn(service['prisma'].company, 'create')
         .mockResolvedValueOnce(companyCreated);
 
-      const result = await service.create(userId, companyCreated);
+      const result = await service.create(companyCreated);
 
       expect(result).toEqual(companyCreated);
     });
@@ -83,8 +87,6 @@ describe('CompanyService', () => {
         name: 'company test',
         cnpj: '11111111111111',
       };
-
-      const userId = '1';
 
       const companyCreated = {
         ...createCompanyDto,
@@ -98,7 +100,7 @@ describe('CompanyService', () => {
         .spyOn(service['prisma'].company, 'findUnique')
         .mockResolvedValueOnce(companyCreated);
 
-      await expect(service.create(userId, createCompanyDto)).rejects.toThrow(
+      await expect(service.create(createCompanyDto)).rejects.toThrow(
         ConflictException,
       );
     });
@@ -109,6 +111,17 @@ describe('CompanyService', () => {
   describe('listCompany', () => {
     it('should list company', async () => {
       const userId = '1';
+      const user = {
+        id: '1',
+        email: 'existing@example.com',
+        name: 'Test',
+        password: 'password',
+        type: 'user',
+        companyId: '1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
       const company = {
         id: '1',
         name: 'Company teste',
@@ -121,6 +134,10 @@ describe('CompanyService', () => {
       jest
         .spyOn(service['prisma'].company, 'findUnique')
         .mockResolvedValueOnce(company);
+
+      jest
+        .spyOn(service['prisma'].user, 'findUnique')
+        .mockResolvedValueOnce(user);
 
       const result = await service.listCompany(userId);
 

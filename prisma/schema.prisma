@@ -14,15 +14,15 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  name       String      @unique
-  email      String      @unique
-  password   String
-  type       String
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @default(now()) @map("updated_at")
-  company    Company?
-  connection Connection?
+  id        String   @id @default(uuid())
+  name      String   @unique
+  email     String   @unique
+  password  String
+  type      String
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
 
   @@map("users")
 }
@@ -31,26 +31,27 @@ model Company {
   id                 String               @id @default(uuid())
   name               String
   cnpj               String               @unique
-  user               User                 @relation(fields: [userId], references: [id])
-  userId             String               @unique @map("user_id")
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @default(now()) @map("updated_at")
   WhatsappMessageLog WhatsappMessageLog[]
+  user               User[]
+  connection         Connection?
 
   @@map("companies")
 }
 
 model Connection {
   id          String   @id @default(uuid())
-  sessionId   String   @map("session_id")
+  sessionId   String   @unique @map("session_id")
   phoneNumber String   @unique @map("phone_number")
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String   @unique @map("user_id")
+  companyId   String   @unique @map("company_id")
+  company     Company  @relation(fields: [companyId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @default(now()) @map("updated_at")
 
   @@map("connections")
 }
+
 
 model WhatsappMessageLog {
   id          String   @id @default(uuid())

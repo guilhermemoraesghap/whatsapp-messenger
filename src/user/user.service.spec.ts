@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-
+import { EmailService } from '../email/email.service';
 describe('UserService', () => {
   let service: UserService;
 
@@ -10,6 +10,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
+        EmailService,
         {
           provide: PrismaService,
           useValue: {
@@ -37,6 +38,7 @@ describe('UserService', () => {
         name: 'Test',
         password: 'password',
         type: 'user',
+        companyId: '1',
       };
       const createdUser = {
         ...createUserDto,
@@ -63,6 +65,7 @@ describe('UserService', () => {
         name: 'Test',
         password: 'password',
         type: 'user',
+        companyId: '1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -78,33 +81,59 @@ describe('UserService', () => {
   });
 
   describe('update', () => {
-    it('should update an existing user', async () => {
-      const userId = '123';
-      const updateUserDto = {
-        name: 'Updated Name',
-        email: 'updated@example.com',
-      };
+    describe('update', () => {
+      it('should update an existing user', async () => {
+        const userId = '1';
+        const updateUserDto = {
+          name: 'Updated Name',
+          email: 'updated@example.com',
+        };
 
-      const existingUser = {
-        id: userId,
-        name: 'Updated Name',
-        email: 'updated@example.com',
-        password: 'password',
-        type: 'user',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        const existingUser = {
+          id: userId,
+          name: 'Old Name',
+          email: 'old@example.com',
+          password: 'password',
+          type: 'user',
+          companyId: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-      jest
-        .spyOn(service['prisma'].user, 'findUnique')
-        .mockResolvedValue(existingUser);
-      jest.spyOn(service['prisma'].user, 'update').mockResolvedValue(null);
+        const updatedUser = {
+          ...existingUser,
+          ...updateUserDto,
+        };
 
-      const result = await service.update(userId, updateUserDto);
+        jest
+          .spyOn(service['prisma'].user, 'findUnique')
+          .mockResolvedValueOnce(existingUser);
 
-      expect(result).toEqual({
-        ...existingUser,
-        ...updateUserDto,
+        jest
+          .spyOn(service['prisma'].user, 'update')
+          .mockResolvedValue(updatedUser);
+
+        jest.spyOn(service, 'findById').mockResolvedValue(updatedUser);
+
+        const result = await service.update(userId, updateUserDto);
+
+        expect(result).toEqual(updatedUser);
+      });
+
+      it('should throw NotFoundException if user does not exist', async () => {
+        const userId = 'nonexistent';
+        const updateUserDto = {
+          name: 'Updated Name',
+          email: 'updated@example.com',
+        };
+
+        jest
+          .spyOn(service['prisma'].user, 'findUnique')
+          .mockResolvedValue(null);
+
+        await expect(service.update(userId, updateUserDto)).rejects.toThrow(
+          NotFoundException,
+        );
       });
     });
 
@@ -131,6 +160,7 @@ describe('UserService', () => {
         name: 'Test',
         email: 'test@example.com',
         type: 'user',
+        companyId: '1',
         password: 'password',
         createdAt: new Date(),
         updatedAt: new Date(),

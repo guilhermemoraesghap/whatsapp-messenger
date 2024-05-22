@@ -1,9 +1,12 @@
+import { IsNotEmpty } from 'class-validator';
+
 export class ChangePasswordDto {
   /**
    * Senha antiga.
    *
    * @example 123@#Qwe
    */
+  @IsNotEmpty({ message: 'Senha antiga obrigatória.' })
   oldPassword: string;
 
   /**
@@ -11,6 +14,7 @@ export class ChangePasswordDto {
    *
    * @example Qwe@#123
    */
+  @IsNotEmpty({ message: 'Nova senha obrigatória.' })
   newPassword: string;
 
   /**
@@ -18,5 +22,6 @@ export class ChangePasswordDto {
    *
    * @example Qwe@#123
    */
+  @IsNotEmpty({ message: 'Confirmar senha obrigatório.' })
   confirmPassword: string;
 }

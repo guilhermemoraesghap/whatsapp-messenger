@@ -11,7 +11,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../email/email.service';
 import { compare } from 'bcryptjs';
-
 export interface CreateUserResponse {
   id: string;
   name: string;
@@ -29,6 +28,7 @@ const selectFields = {
   password: false,
   type: true,
   updatedAt: true,
+  companyId: true,
 };
 
 @Injectable()
@@ -39,7 +39,7 @@ export class UserService {
   ) {}
 
   async create(
-    { email, name, password }: CreateUserDto,
+    createUserDto: CreateUserDto,
     userType: string,
   ): Promise<CreateUserResponse> {
     if (userType !== 'admin') {
@@ -50,19 +50,29 @@ export class UserService {
 
     const emailAlreadyExists = await this.prisma.user.findUnique({
       where: {
-        email,
+        email: createUserDto.email,
       },
     });
 
     if (emailAlreadyExists)
       throw new ConflictException('Este e-mail já está em uso');
 
-    const passwordHash = await hash(password, 8);
+    const nameAlreadyExists = await this.prisma.user.findUnique({
+      where: {
+        name: createUserDto.name,
+      },
+    });
+
+    if (nameAlreadyExists)
+      throw new ConflictException('Este nome já está em uso');
+
+    const passwordHash = await hash(createUserDto.password, 8);
 
     const userCreated = await this.prisma.user.create({
       data: {
-        email,
-        name,
+        companyId: createUserDto.companyId,
+        email: createUserDto.email,
+        name: createUserDto.name,
         password: passwordHash,
         type: 'user',
       },
@@ -95,6 +105,30 @@ export class UserService {
     });
 
     if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    const emailAlreadyExists = await this.prisma.user.findUnique({
+      where: {
+        email,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+    if (emailAlreadyExists)
+      throw new ConflictException('Este e-mail já está em uso');
+
+    const nameAlreadyExists = await this.prisma.user.findUnique({
+      where: {
+        name,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+    if (nameAlreadyExists)
+      throw new ConflictException('Este nome já está em uso');
 
     await this.prisma.user.update({
       data: {
@@ -192,5 +226,15 @@ export class UserService {
         password: passwordHash,
       },
     });
+  }
+
+  async findByCompanyId(id: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        companyId: id,
+      },
+    });
+
+    return users;
   }
 }

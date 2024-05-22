@@ -1,16 +1,12 @@
-export class SendMessageDto {
-  /**
-   * ID da sessão.
-   *
-   * @example 10858bca-6eea-49d0-a582-b2b4129da48c
-   */
-  sessionId: string;
+import { IsNotEmpty } from 'class-validator';
 
+export class SendMessageDto {
   /**
    * Número de telefone do dispositivo da sessão.
    *
    * @example 553199999999
    */
+  @IsNotEmpty({ message: 'Número de telefone obrigatório.' })
   phoneNumber: string;
 
   /**
@@ -18,6 +14,7 @@ export class SendMessageDto {
    *
    * @example Olá, segue os dados do seu agendamento...
    */
+  @IsNotEmpty({ message: 'Mensagem obrigatória.' })
   message: string;
 
   /**
@@ -25,6 +22,7 @@ export class SendMessageDto {
    *
    * @example 9999999
    */
+  @IsNotEmpty({ message: 'Identificador do paciente obrigatório.' })
   patientId: string;
 
   /**
@@ -32,6 +30,7 @@ export class SendMessageDto {
    *
    * @example John Doe
    */
+  @IsNotEmpty({ message: 'Nomde do paciente obrigatório.' })
   patientName: string;
 
   /**
@@ -39,5 +38,6 @@ export class SendMessageDto {
    *
    * @example 10858bca-6eea-49d0-a582-b2b4129da48c
    */
+  @IsNotEmpty({ message: 'Identificador da empresa obrigatório.' })
   companyId: string;
 }

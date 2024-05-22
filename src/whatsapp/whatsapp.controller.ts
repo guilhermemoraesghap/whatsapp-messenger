@@ -21,17 +21,10 @@ export class WhatsAppController {
   @Post('send-message')
   async sendMessage(
     @Body()
-    {
-      companyId,
-      message,
-      patientId,
-      patientName,
-      phoneNumber,
-      sessionId,
-    }: SendMessageDto,
+    { companyId, message, patientId, patientName, phoneNumber }: SendMessageDto,
   ): Promise<string> {
-    if (!sessionId || !phoneNumber || !message) {
-      return 'sessão, número de telefone e mensagem são necessários para enviar uma mensagem.';
+    if (!phoneNumber || !message) {
+      return 'Número de telefone e mensagem são necessários para enviar uma mensagem.';
     }
 
     return await this.whatsappService.sendMessage({
@@ -40,7 +33,6 @@ export class WhatsAppController {
       patientId,
       patientName,
       phoneNumber,
-      sessionId,
     });
   }
 }

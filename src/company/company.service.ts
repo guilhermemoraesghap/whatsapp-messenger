@@ -15,7 +15,7 @@ export class CompanyService {
     private userService: UserService,
   ) {}
 
-  async create(id: string, createCompanyDto: CreateCompanyDto) {
+  async create(createCompanyDto: CreateCompanyDto) {
     const cnpjAlreadyExists = await this.prisma.company.findUnique({
       where: {
         cnpj: createCompanyDto.cnpj,
@@ -24,16 +24,13 @@ export class CompanyService {
 
     if (cnpjAlreadyExists)
       throw new ConflictException('Este CNPJ já está em uso');
-
-    await this.userService.findById(id);
-
     const companyCreated = await this.prisma.company.create({
       data: {
         cnpj: createCompanyDto.cnpj,
         name: createCompanyDto.name,
-        userId: id,
       },
     });
+
     return companyCreated;
   }
 
@@ -46,7 +43,11 @@ export class CompanyService {
 
     if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
 
-    if (companyExists.userId !== userId)
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    if (userExists.companyId !== id)
       throw new ConflictException(
         'Não é permitido usuário de outra empresa modificar esta empresa.',
       );
@@ -77,9 +78,13 @@ export class CompanyService {
   }
 
   async listCompany(userId: string) {
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
     const company = await this.prisma.company.findUnique({
       where: {
-        userId,
+        id: userExists.companyId,
       },
     });
 

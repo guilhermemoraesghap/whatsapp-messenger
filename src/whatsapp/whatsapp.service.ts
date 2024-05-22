@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   makeWASocket,
   DisconnectReason,
@@ -17,14 +13,17 @@ import { ConnectionService } from '../connection/connection.service';
 import * as fs from 'fs';
 import { PrismaService } from '../prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
+import { EmailService } from '../email/email.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class WhatsAppService {
   private sessions: Map<string, WASocket> = new Map();
-  private sock: WASocket;
 
   constructor(
     private readonly connectionService: ConnectionService,
+    private readonly emailService: EmailService,
+    private readonly userService: UserService,
     private prisma: PrismaService,
   ) {
     this.loadSessions();
@@ -34,67 +33,131 @@ export class WhatsAppService {
     userId: string,
   ): Promise<{ sessionId: string; qrCode: string }> {
     const sessionId = uuidv4();
-
     const authPath = `./sessions/${sessionId}`;
-
     const { state, saveCreds } = await useMultiFileAuthState(authPath);
 
-    this.sock = makeWASocket({
+    const sock = makeWASocket({
       auth: state,
       printQRInTerminal: true,
     });
 
-    this.sessions.set(sessionId, this.sock);
+    this.sessions.set(sessionId, sock);
+
+    const handleConnectionUpdate = async (update: ConnectionState) => {
+      const { qr, connection, lastDisconnect } = update;
+
+      if (qr) {
+        qrcode.toDataURL(qr, (err, url) => {
+          if (err) {
+            console.error('Erro ao gerar QR Code:', err);
+          } else {
+            return { sessionId, qrCode: url };
+          }
+        });
+      }
+
+      if (connection === 'open') {
+        console.log(`Conexão estabelecida para a sessão ${sessionId}`);
+      }
+
+      if (connection === 'close') {
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+        const loggedOut = statusCode === DisconnectReason.loggedOut;
+
+        if (loggedOut) {
+          const userExists = await this.userService.findById(userId);
+
+          const users = await this.userService.findByCompanyId(
+            userExists.companyId,
+          );
+
+          const usersEmails = users.map((user) => user.email);
+
+          const sessionPath = `./sessions/${sessionId}`;
+
+          fs.rmdirSync(sessionPath, { recursive: true });
+
+          this.sessions.delete(sessionId);
+
+          await this.prisma.connection.delete({
+            where: {
+              sessionId: sessionId,
+            },
+          });
+
+          await this.emailService.sendEmail({
+            subject: 'Dispositivo whatsapp desconectado.',
+            text: 'Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+            to: usersEmails,
+            html: `
+            Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.</b>
+            <br/><br/>
+            <b>Não responda este-email</b>
+        `,
+          });
+
+          return;
+        }
+
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        if (shouldReconnect) {
+          try {
+            const { state: newState, saveCreds: newSaveCreds } =
+              await useMultiFileAuthState(authPath);
+
+            const newSock = makeWASocket({
+              auth: newState,
+              printQRInTerminal: false,
+            });
+
+            this.sessions.set(sessionId, newSock);
+
+            newSock.ev.on('creds.update', newSaveCreds);
+
+            const phoneNumber = newSock.user.id.split(':')[0];
+            await this.connectionService.createOrUpdate({
+              phoneNumber,
+              sessionId,
+              userId,
+            });
+
+            newSock.ev.on('connection.update', handleConnectionUpdate);
+          } catch (err) {
+            const sessionPath = `./sessions/${sessionId}`;
+            fs.rmdirSync(sessionPath, { recursive: true });
+            this.sessions.delete(sessionId);
+            console.error('Erro ao tentar reconectar:', err);
+          }
+        }
+      }
+    };
+
+    sock.ev.on('connection.update', handleConnectionUpdate);
+    sock.ev.on('creds.update', saveCreds);
 
     return new Promise<{ sessionId: string; qrCode: string }>(
       (resolve, reject) => {
-        this.sock.ev.on(
-          'connection.update',
-          async (update: ConnectionState) => {
-            const { qr, connection, lastDisconnect } = update;
-
-            if (qr) {
-              qrcode.toDataURL(qr, (err, url) => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve({ sessionId, qrCode: url });
-                }
-              });
-            }
-
-            if (connection === 'open') {
-              console.log(`Conexão estabelecida para a sessão ${sessionId}`);
-            }
-
-            if (connection === 'close') {
-              const shouldReconnect =
-                (lastDisconnect?.error as Boom)?.output?.statusCode !==
-                DisconnectReason.loggedOut;
-
-              if (shouldReconnect) {
-                this.sock = makeWASocket({
-                  auth: state,
-                  printQRInTerminal: false,
-                });
-
-                this.sessions.set(sessionId, this.sock);
-
-                const phoneNumber = this.sock.user.id.split(':')[0];
-
-                await this.connectionService.createOrUpdate({
-                  phoneNumber,
-                  sessionId,
-                  userId,
-                });
+        sock.ev.on('connection.update', (update: ConnectionState) => {
+          const { qr } = update;
+          if (qr) {
+            qrcode.toDataURL(qr, (err, url) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve({ sessionId, qrCode: url });
               }
-            }
-          },
-        );
-
-        this.sock.ev.on('creds.update', saveCreds);
+            });
+          }
+        });
       },
-    );
+    ).catch((error) => {
+      sock.ws.close();
+      const sessionPath = `./sessions/${sessionId}`;
+      fs.rmdirSync(sessionPath, { recursive: true });
+      this.sessions.delete(sessionId);
+      throw error;
+    });
   }
 
   async sendMessage({
@@ -103,21 +166,29 @@ export class WhatsAppService {
     patientId,
     patientName,
     phoneNumber,
-    sessionId,
   }: SendMessageDto): Promise<string> {
-    const companyExists = await this.prisma.company.findUnique({
-      where: {
-        id: companyId,
-      },
-    });
-
-    if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
-
     try {
-      const sock = this.sessions.get(sessionId);
+      const companyExists = await this.prisma.company.findUnique({
+        where: {
+          id: companyId,
+        },
+      });
+
+      if (!companyExists)
+        throw new NotFoundException('Empresa não encontrada.');
+
+      const connectionExists =
+        await this.connectionService.findByCompanyId(companyId);
+
+      if (!connectionExists)
+        throw new NotFoundException('Essa empresa não possui uma conexão.');
+
+      const sock = this.sessions.get(connectionExists.sessionId);
 
       if (!sock) {
-        throw new Error(`Sessão com ID ${sessionId} não encontrada`);
+        throw new NotFoundException(
+          `Sessão com ID ${connectionExists.sessionId} para a empresa ${companyExists.name} não encontrada`,
+        );
       }
 
       const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
@@ -126,10 +197,8 @@ export class WhatsAppService {
 
       console.log(`Mensagem enviada para ${formattedNumber}`);
 
-      return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${sessionId}!`;
+      return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${connectionExists.sessionId}!`;
     } catch (error) {
-      console.log(`Erro ao enviar mensagem através do whatsapp.`);
-
       await this.prisma.whatsappMessageLog.create({
         data: {
           message,
@@ -140,14 +209,13 @@ export class WhatsAppService {
         },
       });
 
-      throw new ConflictException(
-        'Erro ao enviar mensagem através do whatsapp, informações salvas no log de mensagens.',
-      );
+      throw error;
     }
   }
 
   async resendMessage({ phoneNumber, sessionId, message }) {
     const sock = this.sessions.get(sessionId);
+
     if (!sock) {
       throw new Error(`Sessão com ID ${sessionId} não encontrada`);
     }

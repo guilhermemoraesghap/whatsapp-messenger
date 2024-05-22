@@ -25,12 +25,12 @@ export class UserController {
   @Post()
   @UseGuards(JwtGuard)
   async create(
-    @Body() { email, name, password }: CreateUserDto,
+    @Body() { companyId, email, name, password }: CreateUserDto,
     @Res() response: Response,
     @CurrentUser() user: AuthUser,
   ) {
     const userCreated = await this.userService.create(
-      { email, name, password },
+      { companyId, email, name, password },
       user.type,
     );
 

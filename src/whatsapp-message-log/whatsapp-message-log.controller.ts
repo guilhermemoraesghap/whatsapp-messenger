@@ -1,8 +1,9 @@
-import { Controller, Get, UseGuards, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, UseGuards, Post, Body } from '@nestjs/common';
 import { WhatsAppMessageLogService } from './whatsapp-message-log.service';
 import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { ApiTags } from '@nestjs/swagger';
 import { ResendMessageDto } from './dto/resend-message.dto';
+import { AuthUser, CurrentUser } from '../auth/jwt/current-user';
 
 @ApiTags('whatsapp-message-log')
 @Controller('whatsapp-message-log')
@@ -11,18 +12,22 @@ export class WhatsAppMessageLogController {
     private readonly whatssAppMessageLogService: WhatsAppMessageLogService,
   ) {}
 
-  @Get(':id')
+  @Get()
   @UseGuards(JwtGuard)
-  async findByCompanyId(@Param('id') id: string) {
-    return await this.whatssAppMessageLogService.findByCompanyId(id);
+  async findByCompanyId(@CurrentUser() user: AuthUser) {
+    return await this.whatssAppMessageLogService.findByCompanyId(user.id);
   }
 
   @Post('resend-message')
   @UseGuards(JwtGuard)
-  async resendMessageToWhatsApp(@Body() { id, sessionId }: ResendMessageDto) {
+  async resendMessageToWhatsApp(
+    @CurrentUser() user: AuthUser,
+    @Body() { id }: ResendMessageDto,
+  ) {
+    const userId = user.id;
     return await this.whatssAppMessageLogService.resendMessageToWhatsApp({
       id,
-      sessionId,
+      userId,
     });
   }
 }
