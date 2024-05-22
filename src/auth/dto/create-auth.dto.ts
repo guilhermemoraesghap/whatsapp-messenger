@@ -1,17 +1,12 @@
-import { createZodDto } from 'nestjs-zod';
-import { z } from 'nestjs-zod/z';
+import { IsNotEmpty } from 'class-validator';
 
-const createAuthBodySchema = z.object({
-  username: z.string(),
-  password: z.string(),
-});
-
-class CreateAuthDto extends createZodDto(createAuthBodySchema) {
+class CreateAuthDto {
   /**
    * Senha de acesso do usuário.
    *
    * @example Abc@123
    */
+  @IsNotEmpty({ message: 'Senha obrigatória.' })
   password: string;
 
   /**
@@ -19,7 +14,8 @@ class CreateAuthDto extends createZodDto(createAuthBodySchema) {
    *
    * @example John Doe
    */
+  @IsNotEmpty({ message: 'Nome de usuário obrigatório.' })
   username: string;
 }
 
-export { createAuthBodySchema, CreateAuthDto };
+export { CreateAuthDto };
