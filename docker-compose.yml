@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - "${PORT}:${PORT}"  # Usando a variável de porta definida no .env
+      - "${PORT}:${PORT}"
     depends_on:
       - db
     volumes: 
@@ -21,7 +21,7 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: gzap_database
     ports:
       - '5433:5432'
     volumes:

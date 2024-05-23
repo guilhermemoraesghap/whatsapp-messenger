@@ -1,7 +1,9 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,8 +13,9 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 @Injectable()
 export class CompanyService {
   constructor(
-    private prisma: PrismaService,
-    private userService: UserService,
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
   ) {}
 
   async create(createCompanyDto: CreateCompanyDto) {
@@ -120,5 +123,17 @@ export class CompanyService {
         isActive: !companyExists.isActive,
       },
     });
+  }
+
+  async findById(id: string) {
+    const companyExists = await this.prisma.company.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
+
+    return companyExists;
   }
 }

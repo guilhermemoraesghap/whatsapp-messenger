@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   makeWASocket,
   DisconnectReason,
@@ -32,6 +36,11 @@ export class WhatsAppService {
   async generateQRCode(
     userId: string,
   ): Promise<{ sessionId: string; qrCode: string }> {
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists.companyId)
+      throw new ConflictException('Usuário não tem empresa associada.');
+
     const sessionId = uuidv4();
     const authPath = `./sessions/${sessionId}`;
     const { state, saveCreds } = await useMultiFileAuthState(authPath);
@@ -116,6 +125,7 @@ export class WhatsAppService {
             newSock.ev.on('creds.update', newSaveCreds);
 
             const phoneNumber = newSock.user.id.split(':')[0];
+
             await this.connectionService.createOrUpdate({
               phoneNumber,
               sessionId,
@@ -125,7 +135,9 @@ export class WhatsAppService {
             newSock.ev.on('connection.update', handleConnectionUpdate);
           } catch (err) {
             const sessionPath = `./sessions/${sessionId}`;
-            fs.rmdirSync(sessionPath, { recursive: true });
+            if (sessionPath) {
+              fs.rmdirSync(sessionPath, { recursive: true });
+            }
             this.sessions.delete(sessionId);
             console.error('Erro ao tentar reconectar:', err);
           }
@@ -154,7 +166,9 @@ export class WhatsAppService {
     ).catch((error) => {
       sock.ws.close();
       const sessionPath = `./sessions/${sessionId}`;
-      fs.rmdirSync(sessionPath, { recursive: true });
+      if (sessionPath) {
+        fs.rmdirSync(sessionPath, { recursive: true });
+      }
       this.sessions.delete(sessionId);
       throw error;
     });

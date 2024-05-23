@@ -11,6 +11,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../email/email.service';
 import { compare } from 'bcryptjs';
+import { CompanyService } from '../company/company.service';
 export interface CreateUserResponse {
   id: string;
   name: string;
@@ -35,8 +36,9 @@ const selectFields = {
 @Injectable()
 export class UserService {
   constructor(
-    private prisma: PrismaService,
-    private emailService: EmailService,
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+    private readonly companyService: CompanyService,
   ) {}
 
   async create(
@@ -48,6 +50,8 @@ export class UserService {
         'Apenas usuários do tipo admin podem criar novos usuários',
       );
     }
+
+    await this.companyService.findById(createUserDto.companyId);
 
     const emailAlreadyExists = await this.prisma.user.findUnique({
       where: {

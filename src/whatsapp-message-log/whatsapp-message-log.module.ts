@@ -6,9 +6,10 @@ import { ConnectionService } from '../connection/connection.service';
 import { UserService } from '../user/user.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
+import { CompanyModule } from '../company/company.module';
 
 @Module({
-  imports: [WhatsAppModule, PrismaModule, EmailModule],
+  imports: [WhatsAppModule, PrismaModule, EmailModule, CompanyModule],
   providers: [WhatsAppMessageLogService, ConnectionService, UserService],
   controllers: [WhatsAppMessageLogController],
 })
