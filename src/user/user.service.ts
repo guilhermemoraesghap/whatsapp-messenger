@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'bcryptjs';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,6 +27,7 @@ const selectFields = {
   name: true,
   password: false,
   type: true,
+  isActive: true,
   updatedAt: true,
   companyId: true,
 };
@@ -236,5 +237,30 @@ export class UserService {
     });
 
     return users;
+  }
+
+  async toggleStatus(id: string, userType: string) {
+    if (userType !== 'admin')
+      throw new ConflictException(
+        'Somente usuários admin poder alterar status de um usuário.',
+      );
+
+    const userExists = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: selectFields,
+    });
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    await this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        isActive: !userExists.isActive,
+      },
+    });
   }
 }

@@ -5,7 +5,7 @@ import { Response } from 'express';
 import { HttpStatus } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from '../auth/jwt/current-user';
 import { EmailService } from '../email/email.service';

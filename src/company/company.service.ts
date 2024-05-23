@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
@@ -89,5 +89,36 @@ export class CompanyService {
     });
 
     return company;
+  }
+
+  async toggleStatus(id: string, userId: string) {
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    const companyExists = await this.prisma.company.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
+
+    console.log(companyExists);
+    console.log(userExists);
+
+    if (companyExists.id !== userExists.companyId)
+      throw new ConflictException(
+        'Não é possível alterar status de uma empresa que esse usuário não pertence.',
+      );
+
+    await this.prisma.company.update({
+      where: {
+        id,
+      },
+      data: {
+        isActive: !companyExists.isActive,
+      },
+    });
   }
 }

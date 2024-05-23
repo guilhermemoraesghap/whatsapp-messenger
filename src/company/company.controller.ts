@@ -8,6 +8,7 @@ import {
   Put,
   Param,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -54,5 +55,11 @@ export class CompanyController {
   @UseGuards(JwtGuard)
   async listCompany(@CurrentUser() user: AuthUser) {
     return await this.companyService.listCompany(user.id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtGuard)
+  async toggleStatus(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return await this.companyService.toggleStatus(id, user.id);
   }
 }

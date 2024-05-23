@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CompanyModule } from './company/company.module';
 import { WhatsAppMessageLogModule } from './whatsapp-message-log/whatsapp-message-log.module';
 import { EmailModule } from './email/email.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EmailModule } from './email/email.module';
     CompanyModule,
     WhatsAppMessageLogModule,
     EmailModule,
+    PrismaModule,
   ],
 })
 export class AppModule {}

@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Put,
   Res,
@@ -80,5 +82,11 @@ export class UserController {
       oldPassword,
       confirmPassword,
     );
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtGuard)
+  async toggleStatus(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return await this.userService.toggleStatus(id, user.type);
   }
 }

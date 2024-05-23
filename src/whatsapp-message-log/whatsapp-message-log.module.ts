@@ -1,21 +1,15 @@
 import { Module } from '@nestjs/common';
 import { WhatsAppMessageLogService } from './whatsapp-message-log.service';
-import { PrismaService } from '../prisma.service';
 import { WhatsAppMessageLogController } from './whatsapp-message-log.controller';
 import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 import { ConnectionService } from '../connection/connection.service';
 import { UserService } from '../user/user.service';
-import { EmailService } from '../email/email.service';
+import { PrismaModule } from '../prisma/prisma.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [WhatsAppModule],
-  providers: [
-    WhatsAppMessageLogService,
-    PrismaService,
-    ConnectionService,
-    UserService,
-    EmailService,
-  ],
+  imports: [WhatsAppModule, PrismaModule, EmailModule],
+  providers: [WhatsAppMessageLogService, ConnectionService, UserService],
   controllers: [WhatsAppMessageLogController],
 })
 export class WhatsAppMessageLogModule {}

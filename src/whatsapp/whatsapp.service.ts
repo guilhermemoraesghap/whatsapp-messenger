@@ -11,7 +11,7 @@ import * as qrcode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { ConnectionService } from '../connection/connection.service';
 import * as fs from 'fs';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { EmailService } from '../email/email.service';
 import { UserService } from '../user/user.service';
