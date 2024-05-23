@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { WhatsAppService } from '../whatsapp/whatsapp.service';
 import { ResendMessageDto } from './dto/resend-message.dto';
 import { UserService } from '../user/user.service';
-import { ConnectionService } from 'src/connection/connection.service';
+import { ConnectionService } from '../connection/connection.service';
 
 @Injectable()
 export class WhatsAppMessageLogService {

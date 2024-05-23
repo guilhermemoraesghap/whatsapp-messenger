@@ -252,9 +252,45 @@ export class WhatsAppService {
         const { connection, lastDisconnect } = update;
 
         if (connection === 'close') {
-          const shouldReconnect =
-            (lastDisconnect?.error as Boom)?.output?.statusCode !==
-            DisconnectReason.loggedOut;
+          const statusCode = (lastDisconnect?.error as Boom)?.output
+            ?.statusCode;
+
+          const loggedOut = statusCode === DisconnectReason.loggedOut;
+
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+          if (loggedOut) {
+            const users = await this.userService.findByCompanyId(
+              connectionData.companyId,
+            );
+
+            const usersEmails = users.map((user) => user.email);
+
+            const sessionPath = `./sessions/${connectionData.sessionId}`;
+
+            fs.rmdirSync(sessionPath, { recursive: true });
+
+            this.sessions.delete(connectionData.sessionId);
+
+            await this.prisma.connection.delete({
+              where: {
+                sessionId: connectionData.sessionId,
+              },
+            });
+
+            await this.emailService.sendEmail({
+              subject: 'Dispositivo whatsapp desconectado.',
+              text: 'Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+              to: usersEmails,
+              html: `
+              Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.</b>
+              <br/><br/>
+              <b>Não responda este-email</b>
+          `,
+            });
+
+            return;
+          }
 
           if (shouldReconnect) {
             console.log(`Reconectando sessão ${connection}`);

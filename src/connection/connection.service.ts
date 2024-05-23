@@ -7,15 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateConnectionDto } from './dto/create-connection.dto';
 import * as fs from 'fs';
 import { UserService } from '../user/user.service';
-
-export interface Connection {
-  id: string;
-  sessionId: string;
-  phoneNumber: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -70,7 +61,7 @@ export class ConnectionService {
     }
   }
 
-  async find(userId: string): Promise<Connection> {
+  async find(userId: string) {
     const userExists = await this.userService.findById(userId);
 
     if (!userExists) throw new NotFoundException('Usuário não encontrado.');
@@ -84,7 +75,7 @@ export class ConnectionService {
     return connection;
   }
 
-  async findAll(): Promise<Connection[]> {
+  async findAll() {
     const connections = await this.prisma.connection.findMany();
 
     return connections;
