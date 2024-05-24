@@ -85,11 +85,17 @@ export class CompanyService {
 
     if (!userExists) throw new NotFoundException('Usuário não encontrado.');
 
+    if (!userExists.companyId)
+      throw new NotFoundException('Usuário ainda não possui empresa.');
+
     const company = await this.prisma.company.findUnique({
       where: {
         id: userExists.companyId,
       },
     });
+
+    if (!company)
+      throw new NotFoundException('Usuário ainda não possui empresa.');
 
     return company;
   }
