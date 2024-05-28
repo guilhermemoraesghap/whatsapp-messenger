@@ -75,10 +75,10 @@ describe('CompanyService', () => {
         updatedAt: new Date(),
       };
 
+      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user);
       jest
         .spyOn(prismaService.company, 'findUnique')
         .mockResolvedValueOnce(null);
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(user);
       jest
         .spyOn(prismaService.company, 'create')
         .mockResolvedValueOnce(companyCreated);
@@ -153,16 +153,23 @@ describe('CompanyService', () => {
 
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(company); // Mock to check if company exists
-      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user); // Mock to check if user exists
+        .mockResolvedValueOnce(company);
+
+      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user);
+
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(null); // Mock to check if CNPJ is unique
+        .mockResolvedValueOnce(null);
+
       jest
         .spyOn(prismaService.company, 'update')
-        .mockResolvedValueOnce(companyUpdated); // Mock to update the company
+        .mockResolvedValueOnce(companyUpdated);
 
-      const result = await service.update('1', '1', updateCompanyDto);
+      const result = await service.update(
+        company.id,
+        user.id,
+        updateCompanyDto,
+      );
 
       expect(result).toEqual(companyUpdated);
     });
@@ -170,7 +177,7 @@ describe('CompanyService', () => {
     it('should throw NotFoundException if company does not exist', async () => {
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(null); // Company does not exist
+        .mockResolvedValueOnce(null);
 
       await expect(
         service.update('1', '1', { name: 'new name', cnpj: '12345678901234' }),
@@ -190,8 +197,8 @@ describe('CompanyService', () => {
 
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(company); // Company exists
-      jest.spyOn(userService, 'findById').mockResolvedValueOnce(null); // User does not exist
+        .mockResolvedValueOnce(company);
+      jest.spyOn(userService, 'findById').mockResolvedValueOnce(null);
 
       await expect(
         service.update('1', '1', { name: 'new name', cnpj: '12345678901234' }),
@@ -222,8 +229,8 @@ describe('CompanyService', () => {
 
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(company); // Company exists
-      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user); // User exists but belongs to different company
+        .mockResolvedValueOnce(company);
+      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user);
 
       await expect(
         service.update('1', '2', { name: 'new name', cnpj: '12345678901234' }),
@@ -254,11 +261,11 @@ describe('CompanyService', () => {
 
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(company); // Company exists
-      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user); // User exists
+        .mockResolvedValueOnce(company);
+      jest.spyOn(userService, 'findById').mockResolvedValueOnce(user);
       jest
         .spyOn(prismaService.company, 'findUnique')
-        .mockResolvedValueOnce(company); // CNPJ exists
+        .mockResolvedValueOnce(company);
 
       await expect(
         service.update('1', '1', { name: 'new name', cnpj: '11111111111111' }),

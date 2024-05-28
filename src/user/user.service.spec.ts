@@ -1,11 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EmailService } from '../email/email.service';
 import { CompanyService } from '../company/company.service';
 describe('UserService', () => {
   let service: UserService;
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,6 +42,7 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UserService>(UserService);
+    prismaService = module.get<PrismaService>(PrismaService);
   });
   it('should be defined', () => {
     expect(service).toBeDefined();
@@ -59,15 +65,91 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
+      const adminUser = {
+        id: '1',
+        email: 'admin@example.com',
+        name: 'Admin',
+        password: 'adminpassword',
+        type: 'admin',
+        companyId: '1',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(null);
+      jest
+        .spyOn(prismaService.user, 'create')
+        .mockResolvedValueOnce(createdUser);
+
+      const result = await service.create(createUserDto, adminUser.type);
+
+      expect(result).toEqual(createdUser);
+    });
+
+    it('should throw ForbiddenException if user is not admin', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        name: 'Test',
+        password: 'password',
+        type: 'user',
+        companyId: '1',
+        isActive: true,
+      };
+
+      const regularUser = {
+        id: '1',
+        email: 'regular@example.com',
+        name: 'Regular User',
+        password: 'regularpassword',
+        type: 'user',
+        companyId: '1',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(null);
+      jest
+        .spyOn(prismaService.user, 'create')
+        .mockResolvedValueOnce(regularUser);
+
+      await expect(
+        service.create(createUserDto, regularUser.type),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ConflictException if name already exists', async () => {
+      const createUserDto = {
+        email: 'existing@example.com',
+        name: 'username',
+        password: 'password',
+        companyId: '1',
+      };
+
+      const user = {
+        id: '1',
+        email: 'existing1@example.com',
+        name: 'username',
+        password: 'password',
+        type: 'user',
+        companyId: '1',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
       jest
         .spyOn(service['prisma'].user, 'findUnique')
         .mockResolvedValueOnce(null);
-      jest
-        .spyOn(service['prisma'].user, 'create')
-        .mockResolvedValueOnce(createdUser);
 
-      const result = await service.create(createUserDto, 'admin');
-      expect(result).toEqual(createdUser);
+      jest
+        .spyOn(service['prisma'].user, 'findUnique')
+        .mockResolvedValueOnce(user);
+
+      await expect(service.create(createUserDto, 'admin')).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException if email already exists', async () => {
