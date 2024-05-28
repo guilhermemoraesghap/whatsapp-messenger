@@ -35,4 +35,10 @@ export class WhatsAppController {
       phoneNumber,
     });
   }
+
+  @Post('logout')
+  @UseGuards(JwtGuard)
+  async disconnectDevice(@CurrentUser() user: AuthUser) {
+    return await this.whatsappService.disconnectDevice(user.id);
+  }
 }

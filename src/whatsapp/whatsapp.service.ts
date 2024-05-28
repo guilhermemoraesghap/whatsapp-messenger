@@ -321,4 +321,23 @@ export class WhatsAppService {
       this.sessions.set(connectionData.sessionId, sock);
     }
   }
+
+  async disconnectDevice(userId: string) {
+    const userExists = await this.userService.findById(userId);
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    const connection = await this.connectionService.findByCompanyId(
+      userExists.companyId,
+    );
+
+    if (!connection)
+      throw new ConflictException('Empresa não tem uma conexão ativa.');
+
+    const session = this.sessions.get(connection.sessionId);
+
+    await session.logout();
+
+    return `Sessão de id ${connection.sessionId} desconectada.`;
+  }
 }
