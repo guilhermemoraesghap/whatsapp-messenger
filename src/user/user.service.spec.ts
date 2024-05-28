@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { EmailService } from '../email/email.service';
+import { CompanyService } from '../company/company.service';
 describe('UserService', () => {
   let service: UserService;
 
@@ -10,7 +11,6 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        EmailService,
         {
           provide: PrismaService,
           useValue: {
@@ -21,12 +21,23 @@ describe('UserService', () => {
             },
           },
         },
+        {
+          provide: EmailService,
+          useValue: {
+            sendEmail: jest.fn(),
+          },
+        },
+        {
+          provide: CompanyService,
+          useValue: {
+            findById: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
   });
-
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -39,6 +50,7 @@ describe('UserService', () => {
         password: 'password',
         type: 'user',
         companyId: '1',
+        isActive: true,
       };
       const createdUser = {
         ...createUserDto,
@@ -66,6 +78,7 @@ describe('UserService', () => {
         password: 'password',
         type: 'user',
         companyId: '1',
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -96,6 +109,7 @@ describe('UserService', () => {
           password: 'password',
           type: 'user',
           companyId: '1',
+          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -161,6 +175,7 @@ describe('UserService', () => {
         email: 'test@example.com',
         type: 'user',
         companyId: '1',
+        isActive: true,
         password: 'password',
         createdAt: new Date(),
         updatedAt: new Date(),

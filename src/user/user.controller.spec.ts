@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthUser } from '../auth/jwt/current-user';
 import { EmailService } from '../email/email.service';
+import { CompanyService } from '../company/company.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -17,7 +18,7 @@ describe('UserController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService, PrismaService, EmailService],
+      providers: [UserService, PrismaService, EmailService, CompanyService],
     })
       .overrideGuard(JwtGuard)
       .useValue({ canActivate: () => true })
@@ -91,6 +92,7 @@ describe('UserController', () => {
         type: 'user',
         password: 'password',
         companyId: '1',
+        isActive: true,
       };
 
       jest.spyOn(userService, 'update').mockResolvedValue(userUpdated);
@@ -114,6 +116,7 @@ describe('UserController', () => {
         password: 'password',
         type: 'user',
         companyId: '1',
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
