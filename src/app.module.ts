@@ -7,6 +7,7 @@ import { CompanyModule } from './company/company.module';
 import { WhatsAppMessageLogModule } from './whatsapp-message-log/whatsapp-message-log.module';
 import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ConnectionLogModule } from './connection-log/connection-log.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
     WhatsAppMessageLogModule,
     EmailModule,
     PrismaModule,
+    ConnectionLogModule,
   ],
 })
 export class AppModule {}

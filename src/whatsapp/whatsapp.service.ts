@@ -19,12 +19,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { EmailService } from '../email/email.service';
 import { UserService } from '../user/user.service';
+import { ConnectionLogService } from '../connection-log/connection-log.service';
 
 @Injectable()
 export class WhatsAppService {
   private sessions: Map<string, WASocket> = new Map();
 
   constructor(
+    private readonly connectionLogService: ConnectionLogService,
     private readonly connectionService: ConnectionService,
     private readonly emailService: EmailService,
     private readonly userService: UserService,
@@ -94,6 +96,11 @@ export class WhatsAppService {
             },
           });
 
+          await this.connectionLogService.create({
+            action: 'logout',
+            companyId: userExists.companyId,
+          });
+
           await this.emailService.sendEmail({
             subject: 'Dispositivo whatsapp desconectado.',
             text: 'Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
@@ -108,7 +115,7 @@ export class WhatsAppService {
           return;
         }
 
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        const shouldReconnect = statusCode === DisconnectReason.restartRequired;
 
         if (shouldReconnect) {
           try {
@@ -130,6 +137,11 @@ export class WhatsAppService {
               phoneNumber,
               sessionId,
               userId,
+            });
+
+            await this.connectionLogService.create({
+              action: 'login',
+              companyId: userExists.companyId,
             });
 
             newSock.ev.on('connection.update', handleConnectionUpdate);

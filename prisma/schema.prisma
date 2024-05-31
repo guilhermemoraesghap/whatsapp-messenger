@@ -39,6 +39,7 @@ model Company {
   WhatsappMessageLog WhatsappMessageLog[]
   user               User[]
   connection         Connection?
+  ConnecionLog       ConnectionLog[]
 
   @@map("companies")
 }
@@ -67,4 +68,14 @@ model WhatsappMessageLog {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("whatsapp_message_log")
+}
+
+model ConnectionLog {
+  id        String   @id @default(uuid())
+  action    String
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId String   @map("company_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("connections_logs")
 }
