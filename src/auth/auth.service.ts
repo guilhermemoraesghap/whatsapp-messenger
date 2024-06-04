@@ -29,6 +29,7 @@ export class AuthService {
     const payload = {
       sub: userExists.id,
       email: userExists.email,
+      username: userExists.username,
       type: userExists.type,
     };
 
@@ -40,6 +41,7 @@ export class AuthService {
       access_token: accessToken,
       user: {
         name,
+        username,
         type,
       },
     };
