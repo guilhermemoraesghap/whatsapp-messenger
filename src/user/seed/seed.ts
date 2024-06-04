@@ -19,7 +19,8 @@ export class UserSeed {
       await this.prisma.user.create({
         data: {
           email: 'devghap@ghap.com.br',
-          name: 'master.ghap',
+          name: 'Administrador Ghap',
+          username: 'master.ghap',
           password: passwordHash,
           type: 'admin',
         },

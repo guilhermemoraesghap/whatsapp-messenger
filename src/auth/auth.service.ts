@@ -14,7 +14,7 @@ export class AuthService {
   async create({ password, username }: CreateAuthDto) {
     const userExists = await this.prisma.user.findUnique({
       where: {
-        name: username,
+        username,
       },
     });
 

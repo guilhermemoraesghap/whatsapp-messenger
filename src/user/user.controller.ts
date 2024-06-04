@@ -27,12 +27,12 @@ export class UserController {
   @Post()
   @UseGuards(JwtGuard)
   async create(
-    @Body() { companyId, email, name, password }: CreateUserDto,
+    @Body() { companyId, email, name, username, password }: CreateUserDto,
     @Res() response: Response,
     @CurrentUser() user: AuthUser,
   ) {
     const userCreated = await this.userService.create(
-      { companyId, email, name, password },
+      { companyId, email, name, username, password },
       user.type,
     );
 
@@ -49,12 +49,13 @@ export class UserController {
   @UseGuards(JwtGuard)
   async update(
     @CurrentUser() user: AuthUser,
-    @Body() { email, name }: UpdateUserDto,
+    @Body() { email, name, username }: UpdateUserDto,
     @Res() response: Response,
   ) {
     const userUpdated = await this.userService.update(user.id, {
       email,
       name,
+      username,
     });
 
     return response.status(HttpStatus.OK).json(userUpdated);
@@ -92,7 +93,7 @@ export class UserController {
 
   @Get('all')
   @UseGuards(JwtGuard)
-  async findAll(@CurrentUser() user: AuthUser) {
-    return await this.userService.findAll(user.id);
+  async findAll() {
+    return await this.userService.findAll();
   }
 }

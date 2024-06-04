@@ -64,7 +64,7 @@ export class UserService {
 
     const nameAlreadyExists = await this.prisma.user.findUnique({
       where: {
-        name: createUserDto.name,
+        username: createUserDto.username,
       },
     });
 
@@ -78,6 +78,7 @@ export class UserService {
         companyId: createUserDto.companyId,
         email: createUserDto.email,
         name: createUserDto.name,
+        username: createUserDto.username,
         password: passwordHash,
         type: 'user',
       },
@@ -101,7 +102,7 @@ export class UserService {
     return userExists;
   }
 
-  async update(id: string, { name, email }: UpdateUserDto) {
+  async update(id: string, { name, email, username }: UpdateUserDto) {
     const userExists = await this.prisma.user.findUnique({
       where: {
         id,
@@ -121,24 +122,25 @@ export class UserService {
     });
 
     if (emailAlreadyExists)
-      throw new ConflictException('Este e-mail já está em uso');
+      throw new ConflictException('Este e-mail já está em uso.');
 
-    const nameAlreadyExists = await this.prisma.user.findUnique({
+    const usernameAlreadyExists = await this.prisma.user.findUnique({
       where: {
-        name,
+        username,
         NOT: {
           id,
         },
       },
     });
 
-    if (nameAlreadyExists)
-      throw new ConflictException('Este nome já está em uso');
+    if (usernameAlreadyExists)
+      throw new ConflictException('Este nome de usuário já está em uso.');
 
     await this.prisma.user.update({
       data: {
         email,
         name,
+        username,
       },
       where: {
         id,
@@ -268,19 +270,8 @@ export class UserService {
     });
   }
 
-  async findAll(id: string) {
-    const userExists = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    const users = await this.prisma.user.findMany({
-      where: {
-        companyId: userExists.companyId,
-      },
-      select: selectFields,
-    });
+  async findAll() {
+    const users = await this.prisma.user.findMany();
 
     return users;
   }

@@ -20,6 +20,16 @@ export class CreateUserDto {
   name: string;
 
   /**
+   * Nome do usuário.
+   *
+   * @example john.doe
+   */
+
+  @IsString({ message: 'Nome de usuário deve ser no formato de texto.' })
+  @IsNotEmpty({ message: 'Nome de usuário obrigatório.' })
+  username: string;
+
+  /**
    * Senha de acesso do usuário.
    *
    * @example Abc@123
