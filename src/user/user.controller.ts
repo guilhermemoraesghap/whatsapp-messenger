@@ -89,4 +89,10 @@ export class UserController {
   async toggleStatus(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return await this.userService.toggleStatus(id, user.type);
   }
+
+  @Get('all')
+  @UseGuards(JwtGuard)
+  async findAll(@CurrentUser() user: AuthUser) {
+    return await this.userService.findAll(user.id);
+  }
 }

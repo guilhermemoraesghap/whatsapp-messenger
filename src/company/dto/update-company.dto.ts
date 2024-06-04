@@ -1,12 +1,12 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateCompanyDto } from './create-company.dto';
+import { IsNotEmpty } from 'class-validator';
 
-export class UpdateCompanyDto extends PartialType(CreateCompanyDto) {
+export class UpdateCompanyDto {
   /**
    * Nome da empresa.
    *
    * @example Company Ghost
    */
+  @IsNotEmpty({ message: 'Nome obrigatório.' })
   name: string;
 
   /**
@@ -14,5 +14,6 @@ export class UpdateCompanyDto extends PartialType(CreateCompanyDto) {
    *
    * @example 12345678000111
    */
+  @IsNotEmpty({ message: 'CNPJ obrigatório.' })
   cnpj: string;
 }

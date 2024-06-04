@@ -142,4 +142,10 @@ export class CompanyService {
 
     return companyExists;
   }
+
+  async listAll() {
+    const companies = await this.prisma.company.findMany();
+
+    return companies;
+  }
 }

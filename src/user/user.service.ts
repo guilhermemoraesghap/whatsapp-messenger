@@ -267,4 +267,21 @@ export class UserService {
       },
     });
   }
+
+  async findAll(id: string) {
+    const userExists = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        companyId: userExists.companyId,
+      },
+      select: selectFields,
+    });
+
+    return users;
+  }
 }

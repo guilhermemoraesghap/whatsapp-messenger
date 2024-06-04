@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { UserSeed } from './user/seed/seed';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import * as morgan from 'morgan';
 
 dotenv.config();
 
@@ -33,6 +34,8 @@ async function bootstrap() {
   const seederService = app.get(UserSeed);
 
   await seederService.seedAdminUser();
+
+  app.use(morgan('dev'));
 
   await app.listen(PORT);
 }

@@ -62,4 +62,9 @@ export class CompanyController {
   async toggleStatus(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return await this.companyService.toggleStatus(id, user.id);
   }
+
+  @Get('all')
+  async listAll() {
+    return await this.companyService.listAll();
+  }
 }
