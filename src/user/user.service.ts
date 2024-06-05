@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../email/email.service';
 import { compare } from 'bcryptjs';
 import { CompanyService } from '../company/company.service';
+import { AuthUser } from 'src/auth/jwt/current-user';
 export interface CreateUserResponse {
   id: string;
   name: string;
@@ -102,10 +103,13 @@ export class UserService {
     return userExists;
   }
 
-  async update(id: string, { name, email, username }: UpdateUserDto) {
+  async update(
+    authUser: AuthUser,
+    { name, email, username, password }: UpdateUserDto,
+  ) {
     const userExists = await this.prisma.user.findUnique({
       where: {
-        id,
+        id: authUser.id,
       },
       select: selectFields,
     });
@@ -116,7 +120,7 @@ export class UserService {
       where: {
         email,
         NOT: {
-          id,
+          id: authUser.id,
         },
       },
     });
@@ -128,7 +132,7 @@ export class UserService {
       where: {
         username,
         NOT: {
-          id,
+          id: authUser.id,
         },
       },
     });
@@ -136,18 +140,83 @@ export class UserService {
     if (usernameAlreadyExists)
       throw new ConflictException('Este nome de usuário já está em uso.');
 
+    const passwordHash = await hash(password, 8);
+
     await this.prisma.user.update({
       data: {
         email,
         name,
         username,
+        password: passwordHash,
       },
       where: {
-        id,
+        id: authUser.id,
       },
     });
 
-    const userUpdated = await this.findById(id);
+    const userUpdated = await this.findById(authUser.id);
+
+    return userUpdated;
+  }
+
+  async adminUpdate(
+    authUser: AuthUser,
+    { name, email, username, password, targetUserId }: UpdateUserDto,
+  ) {
+    if (authUser.type !== 'admin') {
+      throw new ConflictException(
+        'Somente usuários admin podem atualizar outros usuários.',
+      );
+    }
+
+    const userExists = await this.prisma.user.findUnique({
+      where: {
+        id: targetUserId,
+      },
+      select: selectFields,
+    });
+
+    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+
+    const emailAlreadyExists = await this.prisma.user.findUnique({
+      where: {
+        email,
+        NOT: {
+          id: targetUserId,
+        },
+      },
+    });
+
+    if (emailAlreadyExists)
+      throw new ConflictException('Este e-mail já está em uso.');
+
+    const usernameAlreadyExists = await this.prisma.user.findUnique({
+      where: {
+        username,
+        NOT: {
+          id: targetUserId,
+        },
+      },
+    });
+
+    if (usernameAlreadyExists)
+      throw new ConflictException('Este nome de usuário já está em uso.');
+
+    const passwordHash = await hash(password, 8);
+
+    await this.prisma.user.update({
+      data: {
+        email,
+        name,
+        username,
+        password: passwordHash,
+      },
+      where: {
+        id: targetUserId,
+      },
+    });
+
+    const userUpdated = await this.findById(targetUserId);
 
     return userUpdated;
   }

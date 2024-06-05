@@ -9,6 +9,7 @@ import { CreateCompanyDto } from './dto/create-company.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { AuthUser } from '../auth/jwt/current-user';
 
 @Injectable()
 export class CompanyService {
@@ -18,7 +19,12 @@ export class CompanyService {
     private readonly userService: UserService,
   ) {}
 
-  async create(createCompanyDto: CreateCompanyDto) {
+  async create(user: AuthUser, createCompanyDto: CreateCompanyDto) {
+    if (user.type !== 'admin')
+      throw new ConflictException(
+        'Somente usuários admin podem criar empresas.',
+      );
+
     const cnpjAlreadyExists = await this.prisma.company.findUnique({
       where: {
         cnpj: createCompanyDto.cnpj,
@@ -37,7 +43,12 @@ export class CompanyService {
     return companyCreated;
   }
 
-  async update(id: string, userId: string, updateCompanyDto: UpdateCompanyDto) {
+  async update(id: string, user: AuthUser, updateCompanyDto: UpdateCompanyDto) {
+    if (user.type !== 'admin')
+      throw new ConflictException(
+        'Somente usuários admin podem atualizar empresas.',
+      );
+
     const companyExists = await this.prisma.company.findUnique({
       where: {
         id,
@@ -45,15 +56,6 @@ export class CompanyService {
     });
 
     if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
-
-    const userExists = await this.userService.findById(userId);
-
-    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
-
-    if (userExists.companyId !== id)
-      throw new ConflictException(
-        'Não é permitido usuário de outra empresa modificar esta empresa.',
-      );
 
     const cnpjAlreadyExists = await this.prisma.company.findUnique({
       where: {
@@ -100,10 +102,11 @@ export class CompanyService {
     return company;
   }
 
-  async toggleStatus(id: string, userId: string) {
-    const userExists = await this.userService.findById(userId);
-
-    if (!userExists) throw new NotFoundException('Usuário não encontrado.');
+  async toggleStatus(id: string, user: AuthUser) {
+    if (user.type !== 'admin')
+      throw new ConflictException(
+        'Somente usuários admin pode modificar status de empresas.',
+      );
 
     const companyExists = await this.prisma.company.findUnique({
       where: {
@@ -112,14 +115,6 @@ export class CompanyService {
     });
 
     if (!companyExists) throw new NotFoundException('Empresa não encontrada.');
-
-    console.log(companyExists);
-    console.log(userExists);
-
-    if (companyExists.id !== userExists.companyId)
-      throw new ConflictException(
-        'Não é possível alterar status de uma empresa que esse usuário não pertence.',
-      );
 
     await this.prisma.company.update({
       where: {

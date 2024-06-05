@@ -28,8 +28,12 @@ export class CompanyController {
   async create(
     @Body() createCompanyDto: CreateCompanyDto,
     @Res() response: Response,
+    @CurrentUser() user: AuthUser,
   ) {
-    const companyCreated = await this.companyService.create(createCompanyDto);
+    const companyCreated = await this.companyService.create(
+      user,
+      createCompanyDto,
+    );
 
     return response.status(HttpStatus.CREATED).json(companyCreated);
   }
@@ -44,7 +48,7 @@ export class CompanyController {
   ) {
     const companyUpdated = await this.companyService.update(
       id,
-      user.id,
+      user,
       updateCompanyDto,
     );
 
@@ -60,7 +64,7 @@ export class CompanyController {
   @Patch(':id')
   @UseGuards(JwtGuard)
   async toggleStatus(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return await this.companyService.toggleStatus(id, user.id);
+    return await this.companyService.toggleStatus(id, user);
   }
 
   @Get('all')

@@ -49,13 +49,34 @@ export class UserController {
   @UseGuards(JwtGuard)
   async update(
     @CurrentUser() user: AuthUser,
-    @Body() { email, name, username }: UpdateUserDto,
+    @Body()
+    { email, name, username, password }: UpdateUserDto,
     @Res() response: Response,
   ) {
-    const userUpdated = await this.userService.update(user.id, {
+    const userUpdated = await this.userService.update(user, {
       email,
       name,
       username,
+      password,
+    });
+
+    return response.status(HttpStatus.OK).json(userUpdated);
+  }
+
+  @Put('admin')
+  @UseGuards(JwtGuard)
+  async adminUpdate(
+    @CurrentUser() user: AuthUser,
+    @Body()
+    { email, name, username, password, targetUserId }: UpdateUserDto,
+    @Res() response: Response,
+  ) {
+    const userUpdated = await this.userService.adminUpdate(user, {
+      email,
+      name,
+      username,
+      password,
+      targetUserId,
     });
 
     return response.status(HttpStatus.OK).json(userUpdated);
