@@ -50,7 +50,7 @@ export class UserController {
   async update(
     @CurrentUser() user: AuthUser,
     @Body()
-    { email, name, username, password }: UpdateUserDto,
+    { email, name, username, password, confirmPassword }: UpdateUserDto,
     @Res() response: Response,
   ) {
     const userUpdated = await this.userService.update(user, {
@@ -58,6 +58,7 @@ export class UserController {
       name,
       username,
       password,
+      confirmPassword,
     });
 
     return response.status(HttpStatus.OK).json(userUpdated);
@@ -68,7 +69,14 @@ export class UserController {
   async adminUpdate(
     @CurrentUser() user: AuthUser,
     @Body()
-    { email, name, username, password, targetUserId }: UpdateUserDto,
+    {
+      email,
+      name,
+      username,
+      password,
+      confirmPassword,
+      targetUserId,
+    }: UpdateUserDto,
     @Res() response: Response,
   ) {
     const userUpdated = await this.userService.adminUpdate(user, {
@@ -76,6 +84,7 @@ export class UserController {
       name,
       username,
       password,
+      confirmPassword,
       targetUserId,
     });
 

@@ -38,6 +38,17 @@ export class UpdateUserDto {
   password?: string;
 
   /**
+   * Confirmação de senha de acesso do usuário.
+   *
+   * @example Abc@123
+   */
+
+  @MinLength(6, {
+    message: 'A confirmação de senha deve ter no mínimo 6 dígitos.',
+  })
+  confirmPassword?: string;
+
+  /**
    * ID do usuário a ser atualizado.
    *
    * @example 10858bca-6eea-49d0-a582-b2b4129da48c

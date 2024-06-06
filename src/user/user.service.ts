@@ -27,6 +27,7 @@ const selectFields = {
   email: true,
   id: true,
   name: true,
+  username: true,
   password: false,
   type: true,
   isActive: true,
@@ -105,7 +106,7 @@ export class UserService {
 
   async update(
     authUser: AuthUser,
-    { name, email, username, password }: UpdateUserDto,
+    { name, email, username, password, confirmPassword }: UpdateUserDto,
   ) {
     const userExists = await this.prisma.user.findUnique({
       where: {
@@ -140,6 +141,9 @@ export class UserService {
     if (usernameAlreadyExists)
       throw new ConflictException('Este nome de usuário já está em uso.');
 
+    if (password !== confirmPassword)
+      throw new ConflictException('Senha e confirmar senha devem ser iguais.');
+
     const passwordHash = await hash(password, 8);
 
     await this.prisma.user.update({
@@ -161,7 +165,14 @@ export class UserService {
 
   async adminUpdate(
     authUser: AuthUser,
-    { name, email, username, password, targetUserId }: UpdateUserDto,
+    {
+      name,
+      email,
+      username,
+      password,
+      confirmPassword,
+      targetUserId,
+    }: UpdateUserDto,
   ) {
     if (authUser.type !== 'admin') {
       throw new ConflictException(
@@ -201,6 +212,9 @@ export class UserService {
 
     if (usernameAlreadyExists)
       throw new ConflictException('Este nome de usuário já está em uso.');
+
+    if (password !== confirmPassword)
+      throw new ConflictException('Senha e confirmar senha devem ser iguais.');
 
     const passwordHash = await hash(password, 8);
 
@@ -309,6 +323,7 @@ export class UserService {
       where: {
         companyId: id,
       },
+      select: selectFields,
     });
 
     return users;
@@ -340,7 +355,9 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      select: selectFields,
+    });
 
     return users;
   }
