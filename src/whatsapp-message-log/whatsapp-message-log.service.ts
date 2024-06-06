@@ -43,7 +43,7 @@ export class WhatsAppMessageLogService {
     if (!whatssAppMessageLogExists)
       throw new NotFoundException('Mensagem de whatsapp não encontrada.');
 
-    if (whatssAppMessageLogExists.reSend)
+    if (whatssAppMessageLogExists.isSent)
       throw new ConflictException('Mensagem já reenviada.');
 
     const userExists = await this.userService.findById(userId);
@@ -73,7 +73,7 @@ export class WhatsAppMessageLogService {
         id,
       },
       data: {
-        reSend: true,
+        isSent: true,
       },
     });
 

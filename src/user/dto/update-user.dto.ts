@@ -35,6 +35,7 @@ export class UpdateUserDto {
    */
 
   @MinLength(6, { message: 'A senha deve ter no mínimo 6 dígitos.' })
+  @IsOptional()
   password?: string;
 
   /**
@@ -46,6 +47,7 @@ export class UpdateUserDto {
   @MinLength(6, {
     message: 'A confirmação de senha deve ter no mínimo 6 dígitos.',
   })
+  @IsOptional()
   confirmPassword?: string;
 
   /**
@@ -56,4 +58,13 @@ export class UpdateUserDto {
   @IsString({ message: 'ID deve ser no formato de texto.' })
   @IsOptional()
   targetUserId?: string;
+
+  /**
+   * ID da empresa.
+   *
+   * @example 10858bca-6eea-49d0-a582-b2b4129da48c
+   */
+
+  @IsOptional()
+  companyId?: string;
 }

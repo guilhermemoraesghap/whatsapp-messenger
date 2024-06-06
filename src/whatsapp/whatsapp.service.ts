@@ -221,6 +221,17 @@ export class WhatsAppService {
 
       await sock.sendMessage(formattedNumber, { text: message });
 
+      await this.prisma.whatsappMessageLog.create({
+        data: {
+          message,
+          phoneNumber,
+          patientId,
+          patientName,
+          companyId,
+          isSent: true,
+        },
+      });
+
       console.log(`Mensagem enviada para ${formattedNumber}`);
 
       return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${connectionExists.sessionId}!`;
@@ -232,6 +243,7 @@ export class WhatsAppService {
           patientId,
           patientName,
           companyId,
+          isSent: false,
         },
       });
 

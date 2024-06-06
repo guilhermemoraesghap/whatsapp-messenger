@@ -63,7 +63,7 @@ model WhatsappMessageLog {
   patientName String   @map("patient_name")
   message     String
   phoneNumber String   @map("phone_number")
-  reSend      Boolean  @default(false) @map("re_send")
+  isSent      Boolean  @map("is_sent")
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String   @map("company_id")
   createdAt   DateTime @default(now()) @map("created_at")

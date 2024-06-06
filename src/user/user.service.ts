@@ -141,10 +141,16 @@ export class UserService {
     if (usernameAlreadyExists)
       throw new ConflictException('Este nome de usuário já está em uso.');
 
-    if (password !== confirmPassword)
-      throw new ConflictException('Senha e confirmar senha devem ser iguais.');
+    let passwordHash;
 
-    const passwordHash = await hash(password, 8);
+    if (password) {
+      if (password !== confirmPassword)
+        throw new ConflictException(
+          'Senha e confirmar senha devem ser iguais.',
+        );
+
+      passwordHash = await hash(password, 8);
+    }
 
     await this.prisma.user.update({
       data: {
@@ -172,6 +178,7 @@ export class UserService {
       password,
       confirmPassword,
       targetUserId,
+      companyId,
     }: UpdateUserDto,
   ) {
     if (authUser.type !== 'admin') {
@@ -213,13 +220,24 @@ export class UserService {
     if (usernameAlreadyExists)
       throw new ConflictException('Este nome de usuário já está em uso.');
 
-    if (password !== confirmPassword)
-      throw new ConflictException('Senha e confirmar senha devem ser iguais.');
+    if (companyId) {
+      await this.companyService.findById(companyId);
+    }
 
-    const passwordHash = await hash(password, 8);
+    let passwordHash;
+
+    if (password) {
+      if (password !== confirmPassword)
+        throw new ConflictException(
+          'Senha e confirmar senha devem ser iguais.',
+        );
+
+      passwordHash = await hash(password, 8);
+    }
 
     await this.prisma.user.update({
       data: {
+        companyId,
         email,
         name,
         username,
@@ -235,8 +253,8 @@ export class UserService {
     return userUpdated;
   }
 
-  async resetPassword(id: string, user: string) {
-    if (id && user)
+  async resetPassword(id: string, username: string) {
+    if (id && username)
       throw new ConflictException(
         'Não é possível informar o ID e o usuário juntos.',
       );
@@ -246,7 +264,7 @@ export class UserService {
     if (id) {
       condition.id = id;
     } else {
-      condition.name = user;
+      condition.username = username;
     }
 
     const userExists = await this.prisma.user.findFirst({

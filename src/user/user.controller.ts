@@ -76,6 +76,7 @@ export class UserController {
       password,
       confirmPassword,
       targetUserId,
+      companyId,
     }: UpdateUserDto,
     @Res() response: Response,
   ) {
@@ -86,14 +87,15 @@ export class UserController {
       password,
       confirmPassword,
       targetUserId,
+      companyId,
     });
 
     return response.status(HttpStatus.OK).json(userUpdated);
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() { id, user }, @Res() response: Response) {
-    await this.userService.resetPassword(id, user);
+  async resetPassword(@Body() { id, username }, @Res() response: Response) {
+    await this.userService.resetPassword(id, username);
 
     return response.status(HttpStatus.OK).json({
       message: 'Sua nova senha foi enviada para o seu e-mail cadastrado.',
