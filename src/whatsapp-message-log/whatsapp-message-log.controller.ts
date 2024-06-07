@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Post,
+  Body,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { WhatsAppMessageLogService } from './whatsapp-message-log.service';
 import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { ApiTags } from '@nestjs/swagger';
@@ -14,8 +22,22 @@ export class WhatsAppMessageLogController {
 
   @Get()
   @UseGuards(JwtGuard)
-  async findByCompanyId(@CurrentUser() user: AuthUser) {
-    return await this.whatssAppMessageLogService.findByCompanyId(user.id);
+  async findByCompanyId(
+    @CurrentUser() user: AuthUser,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('limit', ParseIntPipe) limit: number,
+    @Query('isSent') isSent?: string,
+  ) {
+    let isSentBoolean: boolean | undefined;
+    if (isSent !== undefined) {
+      isSentBoolean = isSent === 'true';
+    }
+    return await this.whatssAppMessageLogService.findByCompanyId(
+      user.id,
+      page,
+      limit,
+      isSentBoolean,
+    );
   }
 
   @Post('resend-message')

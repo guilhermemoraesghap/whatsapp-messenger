@@ -13,6 +13,7 @@ import { EmailService } from '../email/email.service';
 import { compare } from 'bcryptjs';
 import { CompanyService } from '../company/company.service';
 import { AuthUser } from 'src/auth/jwt/current-user';
+import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 export interface CreateUserResponse {
   id: string;
   name: string;
@@ -179,7 +180,7 @@ export class UserService {
       confirmPassword,
       targetUserId,
       companyId,
-    }: UpdateUserDto,
+    }: AdminUpdateUserDto,
   ) {
     if (authUser.type !== 'admin') {
       throw new ConflictException(

@@ -6,7 +6,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
-export class UpdateUserDto {
+export class AdminUpdateUserDto {
   /**
    * Email do usuário.
    *
@@ -55,4 +55,22 @@ export class UpdateUserDto {
   })
   @IsOptional()
   confirmPassword?: string;
+
+  /**
+   * ID do usuário a ser atualizado.
+   *
+   * @example 10858bca-6eea-49d0-a582-b2b4129da48c
+   */
+  @IsString({ message: 'ID deve ser no formato de texto.' })
+  @IsNotEmpty()
+  targetUserId: string;
+
+  /**
+   * ID da empresa.
+   *
+   * @example 10858bca-6eea-49d0-a582-b2b4129da48c
+   */
+
+  @IsOptional()
+  companyId?: string;
 }

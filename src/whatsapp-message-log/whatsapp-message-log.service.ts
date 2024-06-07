@@ -18,15 +18,25 @@ export class WhatsAppMessageLogService {
     private readonly connectionService: ConnectionService,
   ) {}
 
-  async findByCompanyId(userId: string) {
+  async findByCompanyId(
+    userId: string,
+    page: number,
+    limit: number,
+    isSent?: boolean,
+  ) {
     const userExists = await this.userService.findById(userId);
 
     if (!userExists) throw new ConflictException('Usuário não encontrado.');
 
+    const where: any = { companyId: userExists.companyId };
+
+    if (typeof isSent === 'boolean') {
+      where.isSent = isSent;
+    }
     const whatsappMessages = await this.prisma.whatsappMessageLog.findMany({
-      where: {
-        companyId: userExists.companyId,
-      },
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     return whatsappMessages;

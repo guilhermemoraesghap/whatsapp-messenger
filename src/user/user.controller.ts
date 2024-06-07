@@ -18,6 +18,7 @@ import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { AuthUser, CurrentUser } from '../auth/jwt/current-user';
 import { ApiTags } from '@nestjs/swagger';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -77,7 +78,7 @@ export class UserController {
       confirmPassword,
       targetUserId,
       companyId,
-    }: UpdateUserDto,
+    }: AdminUpdateUserDto,
     @Res() response: Response,
   ) {
     const userUpdated = await this.userService.adminUpdate(user, {
