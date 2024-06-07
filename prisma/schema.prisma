@@ -67,7 +67,8 @@ model WhatsappMessageLog {
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String   @map("company_id")
   createdAt   DateTime @default(now()) @map("created_at")
-
+  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at")
+  
   @@map("whatsapp_message_log")
 }
 

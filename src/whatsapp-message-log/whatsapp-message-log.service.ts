@@ -37,33 +37,29 @@ export class WhatsAppMessageLogService {
       where,
       skip: (page - 1) * limit,
       take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return whatsappMessages;
   }
 
-  async resendMessageToWhatsApp({ id, userId }: ResendMessageDto) {
-    const whatssAppMessageLogExists =
-      await this.prisma.whatsappMessageLog.findUnique({
-        where: {
-          id,
-        },
-      });
-
-    if (!whatssAppMessageLogExists)
-      throw new NotFoundException('Mensagem de whatsapp não encontrada.');
-
-    if (whatssAppMessageLogExists.isSent)
-      throw new ConflictException('Mensagem já reenviada.');
-
+  private async findNotSendByCompanyId(userId: string) {
     const userExists = await this.userService.findById(userId);
 
-    if (!userExists) throw new ConflictException('Usuário não encontrado.');
+    const whatsappMessages = await this.prisma.whatsappMessageLog.findMany({
+      where: {
+        isSent: false,
+        companyId: userExists.companyId,
+      },
+    });
 
-    if (userExists.companyId !== whatssAppMessageLogExists.companyId)
-      throw new ConflictException(
-        'Não é possível reenviar mensagem de outra empresa.',
-      );
+    return whatsappMessages;
+  }
+
+  async resendMessageToWhatsApp({ userId }: ResendMessageDto) {
+    const userExists = await this.userService.findById(userId);
 
     const connectionExists = await this.connectionService.findByCompanyId(
       userExists.companyId,
@@ -72,21 +68,23 @@ export class WhatsAppMessageLogService {
     if (!connectionExists)
       throw new NotFoundException('Essa empresa não possui uma conexão.');
 
-    await this.whatsAppService.resendMessage({
-      message: whatssAppMessageLogExists.message,
-      phoneNumber: whatssAppMessageLogExists.phoneNumber,
-      sessionId: connectionExists.sessionId,
-    });
+    const messagesNotSended = await this.findNotSendByCompanyId(userId);
 
-    await this.prisma.whatsappMessageLog.update({
-      where: {
-        id,
-      },
-      data: {
-        isSent: true,
-      },
-    });
+    for await (const messageNotSended of messagesNotSended) {
+      await this.whatsAppService.resendMessage({
+        message: messageNotSended.message,
+        phoneNumber: messageNotSended.phoneNumber,
+        sessionId: connectionExists.sessionId,
+      });
 
-    return `Mensagem enviada com sucesso para ${whatssAppMessageLogExists.phoneNumber} usando o dispositivo ${connectionExists.sessionId}!`;
+      await this.prisma.whatsappMessageLog.update({
+        where: {
+          id: messageNotSended.id,
+        },
+        data: {
+          isSent: true,
+        },
+      });
+    }
   }
 }

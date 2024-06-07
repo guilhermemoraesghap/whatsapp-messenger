@@ -3,14 +3,12 @@ import {
   Get,
   UseGuards,
   Post,
-  Body,
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { WhatsAppMessageLogService } from './whatsapp-message-log.service';
 import { JwtGuard } from '../auth/jwt/jwt-guard';
 import { ApiTags } from '@nestjs/swagger';
-import { ResendMessageDto } from './dto/resend-message.dto';
 import { AuthUser, CurrentUser } from '../auth/jwt/current-user';
 
 @ApiTags('whatsapp-message-log')
@@ -42,14 +40,9 @@ export class WhatsAppMessageLogController {
 
   @Post('resend-message')
   @UseGuards(JwtGuard)
-  async resendMessageToWhatsApp(
-    @CurrentUser() user: AuthUser,
-    @Body() { id }: ResendMessageDto,
-  ) {
-    const userId = user.id;
+  async resendMessageToWhatsApp(@CurrentUser() user: AuthUser) {
     return await this.whatssAppMessageLogService.resendMessageToWhatsApp({
-      id,
-      userId,
+      userId: user.id,
     });
   }
 }

@@ -35,6 +35,18 @@ export class WhatsAppService {
     this.loadSessions();
   }
 
+  private async notifyDisconnectedDevice(companyId: string) {
+    const users = await this.userService.findByCompanyId(companyId);
+    const usersEmails = users.map((user) => user.email);
+
+    await this.emailService.sendEmail({
+      subject: 'Dispositivo whatsapp desconectado.',
+      text: 'Foi realizada uma tentativa de envio de mensagem por whatsapp porém não há dispositivo whatsapp conectado, por favor conecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+      to: usersEmails,
+      html: `Foi realizada uma tentativa de envio de mensagem por whatsapp porém não há dispositivo whatsapp conectado, por favor conecte o dispositivo ao whatsapp para voltar a enviar mensagens.<br/><br/><b>Não responda este-email</b>`,
+    });
+  }
+
   async generateQRCode(
     userId: string,
   ): Promise<{ sessionId: string; qrCode: string }> {
@@ -74,6 +86,7 @@ export class WhatsAppService {
       if (connection === 'close') {
         const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const loggedOut = statusCode === DisconnectReason.loggedOut;
+        const timedOut = statusCode === DisconnectReason.timedOut;
 
         if (loggedOut) {
           const userExists = await this.userService.findById(userId);
@@ -154,6 +167,14 @@ export class WhatsAppService {
             console.error('Erro ao tentar reconectar:', err);
           }
         }
+
+        if (timedOut) {
+          const sessionPath = `./sessions/${sessionId}`;
+          if (sessionPath) {
+            fs.rmdirSync(sessionPath, { recursive: true });
+          }
+          this.sessions.delete(sessionId);
+        }
       }
     };
 
@@ -176,12 +197,6 @@ export class WhatsAppService {
         });
       },
     ).catch((error) => {
-      sock.ws.close();
-      const sessionPath = `./sessions/${sessionId}`;
-      if (sessionPath) {
-        fs.rmdirSync(sessionPath, { recursive: true });
-      }
-      this.sessions.delete(sessionId);
       throw error;
     });
   }
@@ -206,8 +221,11 @@ export class WhatsAppService {
       const connectionExists =
         await this.connectionService.findByCompanyId(companyId);
 
-      if (!connectionExists)
+      if (!connectionExists) {
+        await this.notifyDisconnectedDevice(companyId);
+
         throw new NotFoundException('Essa empresa não possui uma conexão.');
+      }
 
       const sock = this.sessions.get(connectionExists.sessionId);
 
@@ -263,8 +281,6 @@ export class WhatsAppService {
     await sock.sendMessage(formattedNumber, { text: message });
 
     console.log(`Mensagem enviada para ${formattedNumber}`);
-
-    return `Mensagem enviada com sucesso para ${phoneNumber} usando o dispositivo ${sessionId}!`;
   }
 
   private async loadSessions(): Promise<void> {
