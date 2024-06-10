@@ -35,15 +35,15 @@ export class WhatsAppService {
     this.loadSessions();
   }
 
-  private async notifyDisconnectedDevice(companyId: string) {
+  private async notifyDisconnectedDevice(companyId: string, message: string) {
     const users = await this.userService.findByCompanyId(companyId);
     const usersEmails = users.map((user) => user.email);
 
     await this.emailService.sendEmail({
       subject: 'Dispositivo whatsapp desconectado.',
-      text: 'Foi realizada uma tentativa de envio de mensagem por whatsapp porém não há dispositivo whatsapp conectado, por favor conecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+      text: message,
       to: usersEmails,
-      html: `Foi realizada uma tentativa de envio de mensagem por whatsapp porém não há dispositivo whatsapp conectado, por favor conecte o dispositivo ao whatsapp para voltar a enviar mensagens.<br/><br/><b>Não responda este-email</b>`,
+      html: `${message}<br/><br/><b>Não responda este-email</b>`,
     });
   }
 
@@ -91,12 +91,6 @@ export class WhatsAppService {
         if (loggedOut) {
           const userExists = await this.userService.findById(userId);
 
-          const users = await this.userService.findByCompanyId(
-            userExists.companyId,
-          );
-
-          const usersEmails = users.map((user) => user.email);
-
           const sessionPath = `./sessions/${sessionId}`;
 
           fs.rmdirSync(sessionPath, { recursive: true });
@@ -114,16 +108,10 @@ export class WhatsAppService {
             companyId: userExists.companyId,
           });
 
-          await this.emailService.sendEmail({
-            subject: 'Dispositivo whatsapp desconectado.',
-            text: 'Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
-            to: usersEmails,
-            html: `
-            Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.</b>
-            <br/><br/>
-            <b>Não responda este-email</b>
-        `,
-          });
+          await this.notifyDisconnectedDevice(
+            userExists.companyId,
+            'Dispositivo whatsapp desconectado, por favor reconecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+          );
 
           return;
         }
@@ -222,7 +210,10 @@ export class WhatsAppService {
         await this.connectionService.findByCompanyId(companyId);
 
       if (!connectionExists) {
-        await this.notifyDisconnectedDevice(companyId);
+        await this.notifyDisconnectedDevice(
+          companyId,
+          'Foi realizada uma tentativa de envio de mensagem por whatsapp porém não há dispositivo whatsapp conectado, por favor conecte o dispositivo ao whatsapp para voltar a enviar mensagens.',
+        );
 
         throw new NotFoundException('Essa empresa não possui uma conexão.');
       }
