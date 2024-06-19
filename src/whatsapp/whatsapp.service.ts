@@ -35,6 +35,56 @@ export class WhatsAppService {
     this.loadSessions();
   }
 
+  private static ddWithExtraDigit = [
+    '81',
+    '82',
+    '83',
+    '84',
+    '85',
+    '86',
+    '87',
+    '88',
+    '89',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '37',
+    '38',
+    '71',
+    '73',
+    '74',
+    '75',
+    '77',
+    '79',
+  ];
+
+  private static formatPhoneNumber(phoneNumber: string): string {
+    const phoneRegex = /^(\+?55)?(\d{2})(9?)(\d{8})$/;
+
+    const match = phoneNumber.match(phoneRegex);
+
+    if (match) {
+      let countryCode = match[1] || '';
+      const ddd = match[2];
+      const optionalNine = match[3];
+      const number = match[4];
+
+      if (optionalNine && WhatsAppService.ddWithExtraDigit.includes(ddd)) {
+        countryCode = '';
+      }
+
+      if (!countryCode) {
+        countryCode = '55';
+      }
+
+      return `${countryCode}${ddd}${number}`;
+    }
+
+    return phoneNumber;
+  }
+
   private async notifyDisconnectedDevice(companyId: string, message: string) {
     const users = await this.userService.findByCompanyId(companyId);
     const usersEmails = users.map((user) => user.email);
@@ -226,7 +276,9 @@ export class WhatsAppService {
         );
       }
 
-      const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
+      const formattedPhoneNumber =
+        WhatsAppService.formatPhoneNumber(phoneNumber);
+      const formattedNumber = `${formattedPhoneNumber}@s.whatsapp.net`;
 
       await sock.sendMessage(formattedNumber, { text: message });
 
