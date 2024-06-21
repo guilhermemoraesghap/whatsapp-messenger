@@ -419,6 +419,16 @@ export class WhatsAppService {
 
     const session = this.sessions.get(connection.sessionId);
 
+    if (!session) {
+      await this.prisma.connection.delete({
+        where: {
+          companyId: userExists.companyId,
+        },
+      });
+
+      throw new ConflictException('Empresa não tem uma conexão ativa.');
+    }
+
     await session.logout();
 
     return `Sessão de id ${connection.sessionId} desconectada.`;
