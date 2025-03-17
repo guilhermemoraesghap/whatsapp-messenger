@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,55 +10,68 @@
             font-family: Arial, sans-serif;
             padding: 20px;
         }
-    
+
         h1 {
             text-align: center;
         }
-    
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            page-break-inside: auto; /* Isso evita que a tabela se divida no meio */
+            page-break-inside: auto;
+            /* Isso evita que a tabela se divida no meio */
         }
-    
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
-            word-wrap: break-word; /* Para garantir que o texto longos quebrem em várias linhas */
-            overflow-wrap: break-word; /* Quebra palavras longas */
+            word-wrap: break-word;
+            /* Para garantir que o texto longos quebrem em várias linhas */
+            overflow-wrap: break-word;
+            /* Quebra palavras longas */
         }
-    
+
         th {
             background-color: #f2f2f2;
         }
-    
+
         /* Impede que as células da tabela sejam divididas entre páginas */
         tr {
-            page-break-inside: avoid; /* Evita que uma linha da tabela seja cortada ao meio */
+            page-break-inside: avoid;
+            /* Evita que uma linha da tabela seja cortada ao meio */
         }
-    
+
         td {
-            page-break-inside: avoid; /* Evita que o conteúdo da célula seja cortado */
+            page-break-inside: avoid;
+            /* Evita que o conteúdo da célula seja cortado */
         }
-    
+
         /* Forçar que o conteúdo da tabela seja movido para a próxima página quando necessário */
         .page-break {
             page-break-before: always;
         }
     </style>
-    
+
 </head>
+
 <body>
     <h1>Relatório de Mensagens Enviadas</h1>
     <p>Gerado em: {{ date }} | Usuário(a): {{ user }} | {{ company }} </p>
+    <ul>
+        <li>Total de mensagens: <strong>{{ totalMessages }}</strong></li>
+        <li>Mensagens enviadas: <strong>{{ totalSent }}</strong></li>
+        <li>Mensagens não enviadas: <strong>{{ totalNotSent }}</strong></li>
+    </ul>
     <table>
         <thead>
             <tr>
                 <th>Número</th>
                 <th>Mensagem</th>
                 <th>Data e Hora</th>
+                <th>Enviada</th>
             </tr>
         </thead>
         <tbody>
@@ -66,9 +80,11 @@
                 <td>{{ phoneNumber }}</td>
                 <td>{{ message }}</td>
                 <td>{{ sentAt }}</td>
+                <td>{{ sended }}</td>
             </tr>
             {{/messages}}
         </tbody>
     </table>
 </body>
+
 </html>

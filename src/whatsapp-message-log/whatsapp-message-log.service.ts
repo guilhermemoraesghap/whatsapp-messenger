@@ -120,6 +120,7 @@ export class WhatsAppMessageLogService {
       },
       where: {
         isSent: true,
+        companyId: userExists.companyId,
       },
       orderBy: {
         updatedAt: 'asc',
@@ -156,7 +157,7 @@ export class WhatsAppMessageLogService {
     if (!companyExists) throw new ConflictException('Empresa não encontrada.');
 
     const messages = await this.prisma.whatsappMessageLog.findMany({
-      where: { companyId: userExists.companyId, isSent: true },
+      where: { companyId: userExists.companyId },
       orderBy: { updatedAt: 'desc' },
     });
 
@@ -164,6 +165,7 @@ export class WhatsAppMessageLogService {
       phoneNumber: msg.phoneNumber,
       message: msg.message,
       sentAt: format(msg.updatedAt, 'dd/MM/yyyy HH:mm'),
+      sended: msg.isSent ? 'Sim' : 'Não',
     }));
 
     const templatePath = path.resolve(
@@ -176,11 +178,18 @@ export class WhatsAppMessageLogService {
 
     const template = await ejs.renderFile(templatePath);
 
+    const totalMessages = messages.length;
+    const totalSent = messages.filter((msg) => msg.isSent).length;
+    const totalNotSent = totalMessages - totalSent;
+
     const renderedHtml = mustache.render(template, {
       date: format(new Date(), 'dd/MM/yyyy HH:mm:ss'),
       messages: formattedMessages,
       user: userExists.username,
       company: companyExists.name,
+      totalMessages,
+      totalSent,
+      totalNotSent,
     });
 
     const browser = await puppeteer.launch({
